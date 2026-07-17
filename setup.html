@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Setup Partai — Live Taekwondo</title>
+<style>
+  :root{
+    --bg:#0E1116;--panel:#171C24;--line:#2A3242;
+    --chung:#1E6FD9;--hong:#D9261E;--ink:#F2F5FA;--mut:#8A94A6;--gold:#F5B325;--ok:#25C26E;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+       min-height:100dvh;padding:18px;max-width:520px;margin:0 auto}
+  h1{font-size:20px;font-weight:800;margin-bottom:4px}
+  .sub{color:var(--mut);font-size:13px;margin-bottom:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+  .card h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin-bottom:10px}
+  label{display:block;font-size:12px;color:var(--mut);margin-bottom:4px;margin-top:10px}
+  label:first-of-type{margin-top:0}
+  input,select{width:100%;padding:12px;border-radius:9px;border:1px solid var(--line);background:#0E1116;color:var(--ink);font-size:15px}
+  .two{display:flex;gap:10px}
+  .two>div{flex:1}
+  .code-row{display:flex;gap:8px}
+  .code-row input{flex:1;text-transform:uppercase;letter-spacing:.12em;font-weight:700}
+  .ghost{padding:12px 14px;border:1px solid var(--line);border-radius:9px;background:none;color:var(--ink);font-weight:700}
+  .side{border-left:4px solid;padding-left:12px}
+  .side.c{border-color:var(--chung)}
+  .side.h{border-color:var(--hong)}
+  .radio{display:flex;gap:8px;margin-top:6px}
+  .radio button{flex:1;padding:9px;border:1px solid var(--line);border-radius:8px;background:none;color:var(--mut);font-weight:700;font-size:13px}
+  .radio button.on{background:var(--gold);color:#1A1206;border-color:var(--gold)}
+  .prev{display:flex;align-items:center;gap:10px;margin-top:8px}
+  .prev img{width:46px;height:34px;object-fit:cover;border-radius:5px;background:#0E1116;border:1px solid var(--line)}
+  .prev span{font-size:12px;color:var(--mut)}
+  .toggles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .tg{display:flex;align-items:center;gap:8px;padding:10px;border:1px solid var(--line);border-radius:9px;font-size:13px;font-weight:600}
+  .tg input{width:auto}
+  .save{width:100%;padding:15px;border:none;border-radius:11px;background:var(--ok);color:#08130C;font-size:16px;font-weight:800;margin-top:4px}
+  .links{display:flex;gap:8px;margin-top:10px}
+  .links a{flex:1;text-align:center;padding:12px;border:1px solid var(--line);border-radius:9px;color:var(--ink);text-decoration:none;font-weight:700;font-size:14px}
+  .msg{font-size:13px;min-height:18px;margin-top:8px}
+  .msg.ok{color:var(--ok)} .msg.err{color:var(--hong)}
+  .gate{display:flex;flex-direction:column;justify-content:center;min-height:80dvh;gap:12px}
+  .hidden{display:none !important}
+</style>
+</head>
+<body>
+
+  <!-- gerbang PIN -->
+  <div class="gate" id="gate">
+    <h1>Setup Partai</h1>
+    <div class="sub">Halaman penyelenggara. Masukkan PIN untuk membuat pertandingan.</div>
+    <div>
+      <label>PIN</label>
+      <input id="pin" type="password" inputmode="numeric" placeholder="••••">
+    </div>
+    <div class="msg err" id="gateErr"></div>
+    <button class="save" id="btnGate">Masuk</button>
+  </div>
+
+  <!-- form -->
+  <div class="hidden" id="form">
+    <h1>Setup Partai</h1>
+    <div class="sub">Isi data, pilih apa yang tampil di papan, lalu simpan. Bagikan kodenya ke operator & wasit.</div>
+
+    <div class="card">
+      <h2>Pertandingan</h2>
+      <label>Kode Pertandingan</label>
+      <div class="code-row">
+        <input id="kode" placeholder="TKD-1234">
+        <button class="ghost" id="btnGen">Acak</button>
+      </div>
+      <div class="two">
+        <div><label>Nomor Partai</label><input id="no" placeholder="A1001"></div>
+        <div><label>Kategori</label><input id="kategori" placeholder="Child Male −25kg"></div>
+      </div>
+    </div>
+
+    <div class="card side c">
+      <h2 style="color:#7FB2F2">Chung (Biru)</h2>
+      <label>Nama</label><input id="cNama" placeholder="Nama atlet">
+      <label>Negara / Daerah</label><input id="cNegara" placeholder="Indonesia">
+      <div class="radio" id="cMode">
+        <button data-m="flag" class="on">Bendera</button>
+        <button data-m="foto">Foto</button>
+      </div>
+      <div id="cFlagWrap"><label>Kode negara (2 huruf)</label><input id="cFlag" maxlength="2" placeholder="ID" style="text-transform:uppercase"></div>
+      <div id="cFotoWrap" class="hidden"><label>URL foto (Cloudinary dll.)</label><input id="cFoto" placeholder="https://..."></div>
+      <div class="prev"><img id="cPrev" alt=""><span id="cPrevTxt">pratinjau gambar</span></div>
+    </div>
+
+    <div class="card side h">
+      <h2 style="color:#F29B96">Hong (Merah)</h2>
+      <label>Nama</label><input id="hNama" placeholder="Nama atlet">
+      <label>Negara / Daerah</label><input id="hNegara" placeholder="Korea">
+      <div class="radio" id="hMode">
+        <button data-m="flag" class="on">Bendera</button>
+        <button data-m="foto">Foto</button>
+      </div>
+      <div id="hFlagWrap"><label>Kode negara (2 huruf)</label><input id="hFlag" maxlength="2" placeholder="KR" style="text-transform:uppercase"></div>
+      <div id="hFotoWrap" class="hidden"><label>URL foto (Cloudinary dll.)</label><input id="hFoto" placeholder="https://..."></div>
+      <div class="prev"><img id="hPrev" alt=""><span id="hPrevTxt">pratinjau gambar</span></div>
+    </div>
+
+    <div class="card">
+      <h2>Tampilkan di papan tamu</h2>
+      <div class="toggles">
+        <label class="tg"><input type="checkbox" id="tNames" checked> Nama</label>
+        <label class="tg"><input type="checkbox" id="tImg" checked> Bendera / Foto</label>
+        <label class="tg"><input type="checkbox" id="tCountry" checked> Negara</label>
+        <label class="tg"><input type="checkbox" id="tHeader" checked> Nomor & kategori</label>
+        <label class="tg"><input type="checkbox" id="tGamjeom" checked> Gam-jeom</label>
+        <label class="tg"><input type="checkbox" id="tHits" checked> Hits</label>
+        <label class="tg"><input type="checkbox" id="tWon" checked> #WON (ronde)</label>
+      </div>
+    </div>
+
+    <button class="save" id="btnSave">Simpan & Buat Partai</button>
+    <div class="msg" id="msg"></div>
+    <div class="links hidden" id="links">
+      <a id="lnkBoard" href="./" target="_blank">Buka Papan</a>
+      <a id="lnkOp" href="./operator.html" target="_blank">Buka Operator</a>
+    </div>
+  </div>
+
+<script type="module">
+import { db } from "./firebase-config.js";
+import { ref, set, get } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-database.js";
+
+const PIN_ADMIN = "1234";   // ganti sesuai kebutuhan
+const $ = id => document.getElementById(id);
+
+/* gerbang */
+$('btnGate').addEventListener('click', () => {
+  if ($('pin').value.trim() !== PIN_ADMIN){ $('gateErr').textContent = "PIN salah."; return; }
+  $('gate').classList.add('hidden'); $('form').classList.remove('hidden');
+});
+$('pin').addEventListener('keydown', e => { if (e.key==='Enter') $('btnGate').click(); });
+
+/* kode acak */
+function acak(){ $('kode').value = `TKD-${Math.floor(1000+Math.random()*9000)}`; }
+$('btnGen').addEventListener('click', acak); acak();
+
+/* mode bendera/foto + pratinjau */
+function flagUrl(code){ return code && code.length===2 ? `https://flagcdn.com/w160/${code.toLowerCase()}.png` : ""; }
+function setupSide(pref){
+  const mode = $(pref+'Mode');
+  mode.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    [...mode.children].forEach(x => x.classList.toggle('on', x===b));
+    const foto = b.dataset.m === "foto";
+    $(pref+'FlagWrap').classList.toggle('hidden', foto);
+    $(pref+'FotoWrap').classList.toggle('hidden', !foto);
+    prev(pref);
+  });
+  ['Flag','Foto'].forEach(s => $(pref+s).addEventListener('input', () => prev(pref)));
+}
+function modeOf(pref){ return $(pref+'Mode').querySelector('.on').dataset.m; }
+function imgOf(pref){ return modeOf(pref)==="foto" ? $(pref+'Foto').value.trim() : flagUrl($(pref+'Flag').value.trim()); }
+function prev(pref){
+  const url = imgOf(pref);
+  const img = $(pref+'Prev');
+  if (url){ img.src = url; $(pref+'PrevTxt').textContent = ""; } else { img.removeAttribute('src'); $(pref+'PrevTxt').textContent = "pratinjau gambar"; }
+}
+setupSide('c'); setupSide('h');
+
+/* simpan */
+$('btnSave').addEventListener('click', async () => {
+  const kode = $('kode').value.trim().toUpperCase();
+  const msg = $('msg');
+  msg.className = "msg";
+  if (!kode){ msg.classList.add('err'); msg.textContent = "Isi kode pertandingan."; return; }
+
+  const meta = {
+    no: $('no').value.trim(),
+    category: $('kategori').value.trim(),
+    chung: { name:$('cNama').value.trim(), country:$('cNegara').value.trim(), img:imgOf('c') },
+    hong:  { name:$('hNama').value.trim(), country:$('hNegara').value.trim(), img:imgOf('h') }
+  };
+  const config = {
+    showNames:$('tNames').checked, showImg:$('tImg').checked, showCountry:$('tCountry').checked,
+    showHeader:$('tHeader').checked, showGamjeom:$('tGamjeom').checked, showHits:$('tHits').checked, showWon:$('tWon').checked
+  };
+
+  try{
+    await set(ref(db, `matches/${kode}/meta`), meta);
+    await set(ref(db, `matches/${kode}/config`), config);
+    // hanya buat state awal bila belum ada (jangan menimpa pertandingan berjalan)
+    const snap = await get(ref(db, `matches/${kode}/state`));
+    if (!snap.exists()){
+      await set(ref(db, `matches/${kode}/state`), {
+        chung:0, hong:0, round:1, phase:"ready", remaining:120, endAt:0, lastValid:0,
+        gamjeomChung:0, gamjeomHong:0, hitsChung:0, hitsHong:0, wonChung:0, wonHong:0
+      });
+    }
+    msg.classList.add('ok');
+    msg.textContent = `Partai ${kode} tersimpan. Bagikan kode ini ke operator & wasit.`;
+    $('links').classList.remove('hidden');
+    $('lnkOp').href = `./operator.html#${kode}`;
+  }catch(e){
+    msg.classList.add('err'); msg.textContent = "Gagal menyimpan: " + (e.message||e);
+  }
+});
+</script>
+</body>
+</html>

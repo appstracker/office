@@ -2,62 +2,228 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Live Taekwondo — Pilih Peran</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Live Taekwondo — idwt.web.id</title>
 <style>
   :root{
-    --bg:#0E1116;--panel:#171C24;--line:#2A3242;
-    --chung:#1E6FD9;--hong:#D9261E;--ink:#F2F5FA;--mut:#8A94A6;--gold:#F5B325;--ok:#25C26E;
+    --bg:#0B0E13;--chung:#1E6FD9;--chung-dk:#0E2A52;--hong:#D9261E;--hong-dk:#521010;
+    --ink:#F2F5FA;--mut:#8A94A6;--gold:#F5B325;--ok:#25C26E;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden}
   body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-       min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;
-       padding:24px;gap:22px}
-  .brand{text-align:center}
-  .brand .mark{font-size:12px;letter-spacing:.35em;color:var(--gold);font-weight:700}
-  .brand h1{font-size:26px;font-weight:800;margin-top:6px}
-  .brand p{color:var(--mut);font-size:13px;margin-top:6px}
-  .cards{display:flex;flex-direction:column;gap:14px;width:100%;max-width:420px}
-  a.card{
-    display:flex;align-items:center;gap:16px;text-decoration:none;color:var(--ink);
-    background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px;
-    transition:transform .1s,border-color .1s;
-  }
-  a.card:active{transform:scale(.98)}
-  a.card .ico{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;flex-shrink:0}
-  a.card.wasit .ico{background:linear-gradient(135deg,var(--chung),var(--hong));color:#fff}
-  a.card.op .ico{background:var(--ok);color:#08130C}
-  a.card.tamu .ico{background:var(--gold);color:#1A1206}
-  a.card .t{font-size:17px;font-weight:800}
-  a.card .s{font-size:12px;color:var(--mut);margin-top:2px}
-  a.card.soon{opacity:.5;pointer-events:none}
-  a.card .badge{margin-left:auto;font-size:11px;color:var(--mut);border:1px solid var(--line);padding:3px 8px;border-radius:20px}
-  footer{color:var(--mut);font-size:11px;text-align:center;margin-top:4px}
+       height:100dvh;display:flex;flex-direction:column;user-select:none}
+
+  .wait{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px}
+  .wait .mark{font-size:12px;letter-spacing:.35em;color:var(--gold);font-weight:700}
+  .wait h1{font-size:22px;font-weight:800}
+  .wait p{color:var(--mut);font-size:14px}
+
+  .live{flex:1;display:none;flex-direction:column;min-height:0}
+  .live.on{display:flex}
+
+  /* header partai */
+  .head{display:flex;align-items:center;justify-content:center;gap:14px;padding:6px 10px;background:#05070a;border-bottom:1px solid #1a212c;min-height:34px}
+  .head .cat{font-size:clamp(12px,2.4vw,18px);font-weight:800;letter-spacing:.04em}
+  .head .no{font-size:clamp(11px,2vw,15px);color:var(--gold);font-weight:800;letter-spacing:.08em}
+  .head.hide{display:none}
+
+  /* dua sisi */
+  .grid{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0;position:relative}
+  .team{display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:8px;transition:background .2s}
+  .team.chung{background:linear-gradient(160deg,var(--chung-dk),#0B0E13 120%)}
+  .team.hong{background:linear-gradient(160deg,var(--hong-dk),#0B0E13 120%)}
+  .team .top{display:flex;flex-direction:column;align-items:center;gap:4px;position:absolute;top:12px;left:0;right:0;padding:0 10px}
+  .team .img{width:clamp(40px,9vw,78px);height:clamp(30px,6.5vw,56px);object-fit:cover;border-radius:5px;border:1px solid rgba(255,255,255,.2);display:none}
+  .team .img.on{display:block}
+  .team .nm{font-size:clamp(18px,4.5vw,40px);font-weight:900;line-height:1;text-align:center}
+  .team.chung .nm{color:#CFE1F9}.team.hong .nm{color:#F9D6D3}
+  .team .ctry{font-size:clamp(11px,2.2vw,16px);color:var(--mut);font-weight:600}
+  .team .sc{font-size:clamp(80px,22vw,190px);font-weight:900;line-height:.9;font-variant-numeric:tabular-nums;margin-top:20px}
+  .team.bump .sc{animation:bump .4s}
+  @keyframes bump{0%{transform:scale(1)}30%{transform:scale(1.16);color:var(--gold)}100%{transform:scale(1)}}
+
+  /* statistik bawah tiap sisi */
+  .stats{position:absolute;bottom:8px;left:0;right:0;display:flex;justify-content:center;gap:14px}
+  .stat{text-align:center}
+  .stat .k{font-size:9px;letter-spacing:.1em;color:var(--mut);text-transform:uppercase}
+  .stat .v{font-size:clamp(16px,3.2vw,24px);font-weight:800;font-variant-numeric:tabular-nums}
+  .stat.won .v{color:var(--gold)}
+
+  /* pusat: timer */
+  .center{position:absolute;left:50%;top:0;transform:translateX(-50%);
+          display:flex;flex-direction:column;align-items:center;gap:2px;
+          background:rgba(5,7,10,.9);padding:8px 20px 10px;border-radius:0 0 16px 16px;border:1px solid #222b38;border-top:none;z-index:3}
+  .center .clock{font-size:clamp(28px,7vw,52px);font-weight:900;font-variant-numeric:tabular-nums;line-height:1}
+  .center .clock.brk{color:var(--gold)}
+  .center .rnd{font-size:11px;letter-spacing:.15em;color:var(--mut)}
+
+  .banner{text-align:center;padding:8px;font-size:clamp(13px,2.6vw,18px);font-weight:900;letter-spacing:.05em;background:var(--gold);color:#1A1206;display:none}
+  .banner.on{display:block}
+  .banner.win{background:var(--ok);color:#08130C}
+
+  .foot{display:flex;align-items:center;gap:8px;padding:5px 14px;font-size:11px;color:var(--mut);border-top:1px solid #1a212c}
+  .foot .dot{width:8px;height:8px;border-radius:50%;background:var(--mut)}
+  .foot .dot.on{background:var(--ok)}
+  .foot .brand{margin-left:auto;letter-spacing:.1em}
+
+  .sound{position:fixed;right:12px;bottom:34px;z-index:9;background:var(--gold);color:#1A1206;border:none;
+         border-radius:22px;padding:10px 16px;font-size:13px;font-weight:800;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+  .sound.hide{display:none}
 </style>
 </head>
 <body>
-  <div class="brand">
+
+  <div class="wait" id="wait">
     <div class="mark">LIVE TAEKWONDO</div>
-    <h1>Papan Skor</h1>
-    <p>Standar World Taekwondo · penilaian 3 wasit</p>
+    <h1>Menunggu pertandingan…</h1>
+    <p id="waitSub">Belum ada pertandingan yang ditayangkan.</p>
   </div>
 
-  <div class="cards">
-    <a class="card wasit" href="./wasit.html">
-      <div class="ico">W</div>
-      <div><div class="t">Wasit</div><div class="s">Masukkan kode & nomor kursi</div></div>
-    </a>
-    <a class="card op" href="./operator.html">
-      <div class="ico">O</div>
-      <div><div class="t">Operator</div><div class="s">Kendali pertandingan (perlu PIN)</div></div>
-    </a>
-    <a class="card tamu soon" href="./tamu.html">
-      <div class="ico">T</div>
-      <div><div class="t">Tamu / Penonton</div><div class="s">Lihat skor langsung</div></div>
-      <span class="badge">segera</span>
-    </a>
+  <div class="live" id="live">
+    <div class="head" id="head">
+      <span class="cat" id="cat"></span>
+      <span class="no" id="no"></span>
+    </div>
+    <div class="banner" id="banner"></div>
+    <div class="grid">
+      <div class="team chung" id="teamChung">
+        <div class="top">
+          <img class="img" id="imgChung" alt="">
+          <div class="nm" id="nmChung">Chung</div>
+          <div class="ctry" id="ctryChung"></div>
+        </div>
+        <div class="sc" id="scChung">0</div>
+        <div class="stats" id="statChung"></div>
+      </div>
+      <div class="team hong" id="teamHong">
+        <div class="top">
+          <img class="img" id="imgHong" alt="">
+          <div class="nm" id="nmHong">Hong</div>
+          <div class="ctry" id="ctryHong"></div>
+        </div>
+        <div class="sc" id="scHong">0</div>
+        <div class="stats" id="statHong"></div>
+      </div>
+      <div class="center">
+        <div class="clock" id="clock">2:00</div>
+        <div class="rnd">RONDE <span id="round">1</span>/3</div>
+      </div>
+    </div>
+    <div class="foot">
+      <span class="dot" id="dot"></span><span id="connText">menyambung…</span>
+      <span class="brand">idwt.web.id</span>
+    </div>
   </div>
 
-  <footer>idwt.web.id</footer>
+  <button class="sound hide" id="btnSound">🔊 Aktifkan suara</button>
+
+<script type="module">
+import { db } from "./firebase-config.js";
+import { ref, onValue } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-database.js";
+
+const $ = id => document.getElementById(id);
+
+/* ===== suara ===== */
+let ac=null, soundOn=false;
+function initAudio(){
+  if (ac){ ac.resume(); soundOn=true; $('btnSound').classList.add('hide'); return; }
+  try{ ac=new (window.AudioContext||window.webkitAudioContext)(); soundOn=true; $('btnSound').classList.add('hide'); }catch(e){}
+}
+$('btnSound').addEventListener('click', initAudio);
+$('btnSound').classList.remove('hide');
+function nada(f,d,t='sine',v=0.3){ if(!ac||!soundOn)return; const o=ac.createOscillator(),g=ac.createGain();
+  o.type=t;o.frequency.value=f;o.connect(g);g.connect(ac.destination);const n=ac.currentTime;
+  g.gain.setValueAtTime(0,n);g.gain.linearRampToValueAtTime(v,n+0.01);g.gain.exponentialRampToValueAtTime(0.0001,n+d);o.start(n);o.stop(n+d); }
+function bunyiPoin(){ nada(880,0.12,'triangle',0.35); setTimeout(()=>nada(1175,0.14,'triangle',0.35),90); }
+function bunyiBel(){ nada(300,0.7,'sine',0.4); setTimeout(()=>nada(300,0.7,'sine',0.3),120); }
+
+/* ===== ambil pertandingan live ===== */
+let KODE=null;
+const hash=decodeURIComponent(location.hash.replace(/^#/,"")).toUpperCase();
+if (hash){ pasang(hash); }
+else onValue(ref(db,"live"), s=>{ const k=s.val(); if(k&&k!==KODE)pasang(k); else if(!k){KODE=null;$('live').classList.remove('on');$('wait').style.display='flex';} });
+
+let cfg={showNames:true,showImg:true,showCountry:true,showHeader:true,showGamjeom:true,showHits:true,showWon:true};
+let prev={chung:0,hong:0}, prevRem=null, sudahBel=false, pertama=true, cur=null;
+
+function pasang(kode){
+  KODE=kode; $('wait').style.display='none'; $('live').classList.add('on');
+  koneksi();
+  onValue(ref(db,`matches/${kode}/meta`), s=> renderMeta(s.val()||{}));
+  onValue(ref(db,`matches/${kode}/config`), s=>{ cfg=Object.assign(cfg,s.val()||{}); applyConfig(); });
+  onValue(ref(db,`matches/${kode}/state`), s=>{ const st=s.val(); if(st) renderState(st); });
+}
+
+function renderMeta(m){
+  $('cat').textContent = m.category||"";
+  $('no').textContent = m.no ? "PARTAI "+m.no : "";
+  const c=m.chung||{}, h=m.hong||{};
+  $('nmChung').textContent = c.name || "Chung";
+  $('nmHong').textContent  = h.name || "Hong";
+  $('ctryChung').textContent = c.country||"";
+  $('ctryHong').textContent  = h.country||"";
+  setImg('imgChung', c.img); setImg('imgHong', h.img);
+  applyConfig();
+}
+function setImg(id,url){ const el=$(id); if(url){ el.src=url; el.dataset.has="1"; } else { el.removeAttribute('src'); el.dataset.has=""; } applyConfig(); }
+
+function applyConfig(){
+  $('head').classList.toggle('hide', !cfg.showHeader || (!$('cat').textContent && !$('no').textContent));
+  ['Chung','Hong'].forEach(s=>{
+    $('nm'+s).style.display = cfg.showNames ? "" : "none";
+    $('ctry'+s).style.display = cfg.showCountry ? "" : "none";
+    const img=$('img'+s); img.classList.toggle('on', cfg.showImg && img.dataset.has==="1");
+  });
+  renderStats();
+}
+
+function renderState(st){
+  cur=st;
+  if(!pertama){
+    if((st.chung||0)>prev.chung){ bump('teamChung'); bunyiPoin(); }
+    if((st.hong||0)>prev.hong){ bump('teamHong'); bunyiPoin(); }
+  }
+  prev={chung:st.chung||0,hong:st.hong||0}; pertama=false;
+  $('scChung').textContent=st.chung||0;
+  $('scHong').textContent =st.hong||0;
+  $('round').textContent  =st.round||1;
+
+  const b=$('banner');
+  if(st.matchOver && st.winner){ b.textContent="PEMENANG: "+(st.winner==="chung"?($('nmChung').textContent):($('nmHong').textContent)); b.className="banner win on"; }
+  else if(st.phase==="stopped"){ b.textContent="PERTANDINGAN DIHENTIKAN — SELISIH 12"; b.className="banner on"; }
+  else b.className="banner";
+
+  renderStats();
+  renderClock();
+}
+
+function renderStats(){
+  const st=cur||{};
+  const build = side => {
+    let h="";
+    if(cfg.showGamjeom) h+=`<div class="stat"><div class="k">Gam-jeom</div><div class="v">${st['gamjeom'+cap(side)]||0}</div></div>`;
+    if(cfg.showHits)    h+=`<div class="stat"><div class="k">Hits</div><div class="v">${st['hits'+cap(side)]||0}</div></div>`;
+    if(cfg.showWon)     h+=`<div class="stat won"><div class="k">#Won</div><div class="v">${st['won'+cap(side)]||0}</div></div>`;
+    return h;
+  };
+  $('statChung').innerHTML=build('chung');
+  $('statHong').innerHTML =build('hong');
+}
+function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+function fmt(sec){ const m=Math.floor(sec/60); return `${m}:${String(sec%60).padStart(2,'0')}`; }
+function renderClock(){
+  const s=cur; if(!s)return;
+  let sec = s.phase==="running" ? Math.max(0,Math.round((s.endAt-Date.now())/1000)) : (s.remaining??0);
+  if(prevRem!==null && prevRem>0 && sec===0 && s.phase==="running" && !sudahBel){ bunyiBel(); sudahBel=true; }
+  if(sec>0) sudahBel=false; prevRem=sec;
+  const c=$('clock'); c.textContent=fmt(sec); c.classList.toggle('brk', s.phase==="break");
+}
+setInterval(renderClock,250);
+
+function bump(id){ const el=$(id); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+function koneksi(){ onValue(ref(db,".info/connected"), s=>{ const on=s.val()===true; $('dot').classList.toggle('on',on); $('connText').textContent=on?"tersambung":"terputus"; }); }
+</script>
 </body>
 </html>

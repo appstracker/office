@@ -61,6 +61,15 @@
   .obtn.gj-c{background:var(--chung)}
   .obtn.gj-h{background:var(--hong)}
   .obtn.ghost{background:none;border:1px solid var(--line)}
+  .exit{margin-left:8px;background:none;border:1px solid var(--line);color:var(--mut);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:24px;z-index:20}
+  .modal.on{display:flex}
+  .modal .box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;max-width:340px;width:100%;text-align:center}
+  .modal .box p{font-size:15px;line-height:1.5;margin-bottom:16px}
+  .modal .box .btns{display:flex;gap:8px}
+  .modal .box button{flex:1;padding:13px;border:none;border-radius:10px;font-size:15px;font-weight:700}
+  .modal .box .yes{background:var(--hong);color:#fff}
+  .modal .box .no{background:var(--line);color:var(--ink)}
   @media (prefers-reduced-motion:reduce){ .oside .sc{transition:none} }
 </style>
 </head>
@@ -90,6 +99,7 @@
     <div class="top">
       Kode: <span class="code" id="codeView">—</span>
       <span class="conn"><span class="dot" id="connDot"></span><span id="connText">menyambung…</span></span>
+      <button class="exit" id="btnExit">Keluar</button>
     </div>
 
     <div class="board">
@@ -119,6 +129,17 @@
     </div>
   </div>
 
+  <!-- modal konfirmasi keluar -->
+  <div class="modal" id="modal">
+    <div class="box">
+      <p id="modalMsg">Keluar dari panel operator? Skor pertandingan tetap tersimpan.</p>
+      <div class="btns">
+        <button class="no" id="mNo">Batal</button>
+        <button class="yes" id="mYes">Keluar</button>
+      </div>
+    </div>
+  </div>
+
 <script type="module">
 import { db } from "./firebase-config.js";
 import { ref, set, update, onValue, onChildAdded, remove, push, serverTimestamp, get }
@@ -138,7 +159,8 @@ const $ = id => document.getElementById(id);
 let KODE = "", base = null;
 
 /* ====== state pertandingan (operator satu-satunya penulis) ====== */
-let S = { chung:0, hong:0, round:1, phase:"ready", remaining:RONDE_DETIK, endAt:0, lastValid:0 };
+let S = { chung:0, hong:0, round:1, phase:"ready", remaining:RONDE_DETIK, endAt:0, lastValid:0,
+          gamjeomChung:0, gamjeomHong:0, hitsChung:0, hitsHong:0, wonChung:0, wonHong:0 };
 
 function writeState(){ set(ref(db, `matches/${KODE}/state`), S); }
 
@@ -173,9 +195,11 @@ function masukKonsol(){
   $('gate').classList.add('hidden');
   $('console').classList.remove('hidden');
   $('codeView').textContent = KODE;
+  set(ref(db, "live"), KODE);   // jadikan pertandingan ini yang tayang di idwt.web.id
   render(); tickClock();
   pantauKoneksi();
   dengarPencet();
+  pasangBack();
 }
 
 /* ====== koneksi ====== */
@@ -211,6 +235,7 @@ function prosesPencet(key, p, t){
   const judges = new Set(cocok.map(x => x.judge));
   if (judges.size >= WASIT_MINIMAL){
     const pts = TEKNIK[p.tech] || 0;
+    if (p.side === "chung") S.hitsChung = (S.hitsChung||0)+1; else S.hitsHong = (S.hitsHong||0)+1;
     beriPoin(p.side, pts);
     // buang kiriman yang sudah dipakai supaya tidak dihitung ulang
     cocok.forEach(x => {
@@ -236,9 +261,9 @@ function cekSelisih(){
   if (selisih >= SELISIH_STOP){ S.phase = "stopped"; hentikanClock(); }
 }
 
-/* gam-jeom → +1 lawan */
-$('gjChung').addEventListener('click', () => beriPoin('hong', 1));
-$('gjHong').addEventListener('click',  () => beriPoin('chung', 1));
+/* gam-jeom → +1 lawan, dan catat penghitung gam-jeom sisi yang melanggar */
+$('gjChung').addEventListener('click', () => { S.gamjeomChung=(S.gamjeomChung||0)+1; beriPoin('hong', 1); });
+$('gjHong').addEventListener('click',  () => { S.gamjeomHong=(S.gamjeomHong||0)+1;  beriPoin('chung', 1); });
 
 /* undo */
 $('btnUndo').addEventListener('click', () => {
@@ -250,7 +275,8 @@ $('btnUndo').addEventListener('click', () => {
 
 /* reset */
 $('btnReset').addEventListener('click', () => {
-  S = { chung:0, hong:0, round:1, phase:"ready", remaining:RONDE_DETIK, endAt:0, lastValid:0 };
+  S = { chung:0, hong:0, round:1, phase:"ready", remaining:RONDE_DETIK, endAt:0, lastValid:0,
+        gamjeomChung:0, gamjeomHong:0, hitsChung:0, hitsHong:0, wonChung:0, wonHong:0 };
   riwayat = [];
   writeState(); render();
 });
@@ -319,6 +345,18 @@ function flash(side){
 // prefill kode dari URL saat refresh; kalau tidak ada, acak baru
 const hKode = decodeURIComponent(location.hash.replace(/^#/, "")).toUpperCase();
 if (hKode) $('codeInput').value = hKode; else acakKode();
+
+/* ====== keluar / tombol back ====== */
+function mintaKeluar(){ $('modal').classList.add('on'); }
+$('btnExit').addEventListener('click', mintaKeluar);
+$('mNo').addEventListener('click', () => $('modal').classList.remove('on'));
+$('mYes').addEventListener('click', () => { location.hash = ""; location.reload(); });
+
+// cegat tombol back HP setelah masuk konsol
+function pasangBack(){
+  history.pushState({ op:true }, "");
+  window.addEventListener('popstate', () => { history.pushState({ op:true }, ""); mintaKeluar(); });
+}
 </script>
 </body>
 </html>
