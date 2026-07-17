@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panduan — Live Taekwondo (idwt.web.id)</title>
+<style>
+  :root{
+    --bg:#0E1116;--panel:#171C24;--line:#2A3242;
+    --chung:#1E6FD9;--hong:#D9261E;--ink:#F2F5FA;--mut:#95a0b3;--gold:#F5B325;--ok:#25C26E;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+       line-height:1.6;padding:22px 18px 60px;max-width:720px;margin:0 auto}
+  .mark{font-size:11px;letter-spacing:.35em;color:var(--gold);font-weight:700}
+  h1{font-size:24px;font-weight:800;margin:4px 0 2px}
+  .lead{color:var(--mut);font-size:14px;margin-bottom:22px}
+  h2{font-size:17px;font-weight:800;margin:26px 0 8px;padding-top:14px;border-top:1px solid var(--line)}
+  h3{font-size:14px;font-weight:800;margin:16px 0 4px;color:var(--gold)}
+  p{margin:6px 0;font-size:14.5px}
+  ol,ul{margin:6px 0 6px 20px;font-size:14.5px}
+  li{margin:5px 0}
+  code{background:#05070a;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:13px;color:#CFE1F9}
+  .role{border-left:4px solid var(--line);padding:2px 0 2px 14px;margin:10px 0}
+  .role.admin{border-color:var(--gold)}
+  .role.op{border-color:var(--ok)}
+  .role.wasit{border-color:var(--chung)}
+  .role.tamu{border-color:var(--hong)}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:12px 0}
+  .warn{border-color:#5a4410;background:#1c1708}
+  .warn b{color:var(--gold)}
+  .pill{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.05em;padding:2px 8px;border-radius:20px;background:var(--line);color:var(--ink);margin-left:6px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:7px 9px;text-align:left}
+  th{background:var(--panel);color:var(--mut);font-size:12px;letter-spacing:.05em;text-transform:uppercase}
+  .foot{margin-top:34px;color:var(--mut);font-size:12px;text-align:center;letter-spacing:.1em}
+</style>
+</head>
+<body>
+
+  <div class="mark">LIVE TAEKWONDO</div>
+  <h1>Panduan Penggunaan</h1>
+  <p class="lead">Papan skor pertandingan taekwondo real-time standar WT · idwt.web.id</p>
+
+  <div class="box">
+    <b>Empat peran, empat halaman:</b>
+    <ul>
+      <li><b>Penyelenggara</b> → <code>idwt.web.id/setup.html</code> — membuat partai</li>
+      <li><b>Operator</b> → <code>idwt.web.id/operator.html</code> — kendali skor & waktu</li>
+      <li><b>Wasit</b> (×3) → <code>idwt.web.id/wasit.html</code> — menekan poin</li>
+      <li><b>Tamu / Penonton</b> → <code>idwt.web.id</code> — papan skor (otomatis)</li>
+    </ul>
+  </div>
+
+  <h2>Cara Kerja Singkat</h2>
+  <p>Setiap pertandingan punya satu <b>kode</b> (misal <code>TKD-1234</code>). Semua perangkat yang memakai kode sama akan tersambung ke pertandingan yang sama secara real-time. Wasit hanya mengirim tekanan; <b>operator</b> yang menghitung apakah poin sah dan menampilkan skor; <b>tamu</b> hanya melihat.</p>
+
+  <h2>Urutan Memulai Pertandingan</h2>
+  <ol>
+    <li><b>Penyelenggara</b> buka <code>setup.html</code>, buat partai, catat kodenya.</li>
+    <li><b>Operator</b> masuk dengan kode itu — pertandingan otomatis tayang di papan tamu.</li>
+    <li><b>3 wasit</b> masuk dengan kode yang sama, pilih nomor kursi masing-masing.</li>
+    <li><b>Penonton</b> cukup buka <code>idwt.web.id</code>.</li>
+    <li>Operator menekan <b>Mulai</b> — pertandingan berjalan.</li>
+  </ol>
+
+  <h2>Panduan per Peran</h2>
+
+  <div class="role admin">
+    <h3>1. Penyelenggara — Setup Partai</h3>
+    <ol>
+      <li>Buka <code>setup.html</code>, masukkan <b>PIN</b>.</li>
+      <li>Isi <b>Kode Pertandingan</b> (atau tekan Acak), <b>Nomor Partai</b>, dan <b>Kategori</b>.</li>
+      <li>Isi <b>nama</b> dan <b>negara</b> tiap atlet (Chung = biru, Hong = merah).</li>
+      <li>Pilih <b>Bendera</b> (ketik kode negara 2 huruf: <code>ID</code>, <code>KR</code>, <code>US</code>…) atau <b>Foto</b> (tempel URL gambar). Pratinjau muncul otomatis.</li>
+      <li>Centang elemen yang ingin <b>tampil di papan</b>: nama, bendera/foto, negara, nomor & kategori, gam-jeom, hits, #WON.</li>
+      <li>Tekan <b>Simpan &amp; Buat Partai</b>, lalu bagikan kodenya ke operator &amp; wasit.</li>
+    </ol>
+  </div>
+
+  <div class="role op">
+    <h3>2. Operator — Kendali Pertandingan</h3>
+    <ol>
+      <li>Buka <code>operator.html</code>, masukkan <b>PIN</b>, ketik <b>kode</b> yang sama dari penyelenggara.</li>
+      <li>Pastikan titik koneksi <b>hijau</b> (tersambung).</li>
+      <li><b>Waktu:</b> tombol <b>Mulai / Jeda</b> menjalankan timer; <b>Ronde ›</b> untuk pindah ke istirahat lalu ronde berikutnya.</li>
+      <li><b>Gam-jeom:</b> tekan <b>GJ Chung</b> bila Chung melanggar (Hong otomatis +1), begitu sebaliknya.</li>
+      <li><b>Koreksi:</b> <b>Batalkan poin terakhir</b> untuk membatalkan skor yang keliru; <b>Reset</b> untuk mengosongkan seluruh skor & waktu.</li>
+      <li>Skor naik <b>otomatis</b> saat minimal 2 dari 3 wasit setuju — operator tidak menekan skor sendiri.</li>
+    </ol>
+  </div>
+
+  <div class="role wasit">
+    <h3>3. Wasit — Menekan Poin</h3>
+    <ol>
+      <li>Buka <code>wasit.html</code>, masukkan <b>kode</b> pertandingan, pilih <b>nomor wasit</b> (1/2/3).</li>
+      <li>Bila kode salah, muncul "Kode tidak ditemukan" — minta kode yang benar ke operator.</li>
+      <li>Di bar atas terlihat <b>ronde &amp; waktu</b>. Jika ikut berjalan saat operator menekan Mulai, berarti kamu tersambung ke pertandingan yang benar.</li>
+      <li>Tekan tombol sesuai serangan sah. HP <b>bergetar pendek</b> tiap tekan (tanda terdaftar), dan <b>getar dobel</b> saat poin disepakati 2 dari 3 wasit.</li>
+      <li>Layar wasit sengaja <b>tidak menampilkan skor</b> agar fokus menilai.</li>
+      <li>Saat pertandingan <b>berjalan</b>, tombol keluar terkunci agar tidak keluar tak sengaja. Keluar hanya bisa saat waktu dijeda.</li>
+    </ol>
+  </div>
+
+  <div class="role tamu">
+    <h3>4. Tamu / Penonton — Papan Skor</h3>
+    <ol>
+      <li>Cukup buka <code>idwt.web.id</code> — papan menampilkan pertandingan yang sedang tayang.</li>
+      <li>Tekan tombol <b>🔊 Aktifkan suara</b> satu kali agar ada bunyi poin &amp; bel waktu habis (aturan browser HP mewajibkan sentuhan dulu).</li>
+      <li>Cocok ditampilkan di TV atau proyektor.</li>
+    </ol>
+  </div>
+
+  <h2>Aturan Penilaian (Standar WT)</h2>
+  <table>
+    <tr><th>Teknik</th><th>Nilai</th></tr>
+    <tr><td>Pukulan ke badan</td><td>1</td></tr>
+    <tr><td>Tendangan ke badan</td><td>2</td></tr>
+    <tr><td>Tendangan ke kepala</td><td>3</td></tr>
+    <tr><td>Tendangan berputar ke badan</td><td>4</td></tr>
+    <tr><td>Tendangan berputar ke kepala</td><td>5</td></tr>
+  </table>
+  <ul>
+    <li><b>Poin sah:</b> minimal <b>2 dari 3 wasit</b> menekan tombol yang sama dalam <b>1 detik</b>.</li>
+    <li><b>Gam-jeom:</b> pelanggaran → lawan mendapat <b>+1</b>.</li>
+    <li><b>Selisih 12:</b> pertandingan dihentikan otomatis.</li>
+    <li><b>Waktu:</b> 3 ronde × 2 menit, istirahat 1 menit (dikendalikan operator).</li>
+  </ul>
+
+  <h2>Tips Penting</h2>
+  <ul>
+    <li><b>Kode harus sama persis</b> di semua perangkat (huruf besar). Ini penyebab tersering skor tidak muncul.</li>
+    <li><b>Getar</b> hanya berfungsi di HP <b>Android</b>. iPhone/Safari tidak mendukung getar.</li>
+    <li>Refresh halaman <b>tidak mereset</b> — perangkat akan tersambung kembali otomatis.</li>
+    <li>Layar wasit dijaga tetap menyala selama bertugas.</li>
+  </ul>
+
+  <div class="box warn">
+    <b>⚠ Sebelum dipakai pertandingan sungguhan</b>
+    <ul>
+      <li><b>Ganti PIN</b> default. PIN ada di dalam file <code>operator.html</code> dan <code>setup.html</code> (baris <code>PIN_OPERATOR</code> / <code>PIN_ADMIN</code>).</li>
+      <li><b>Kunci Firebase Rules.</b> Saat ini database masih terbuka untuk pengujian — perlu dibatasi agar tamu hanya bisa membaca. <span class="pill">belum</span></li>
+      <li><b>Best-of-3 (#WON)</b> belum aktif; penghitung ronde masih 0. <span class="pill">menyusul</span></li>
+    </ul>
+  </div>
+
+  <h2>Bila Ada Masalah</h2>
+  <ul>
+    <li><b>Skor tidak naik:</b> pastikan kode sama di operator &amp; wasit, dan Firebase Rules sudah di-set.</li>
+    <li><b>Titik koneksi merah/terputus:</b> cek internet perangkat.</li>
+    <li><b>Papan tamu kosong:</b> pastikan operator sudah masuk (operator menentukan pertandingan yang tayang).</li>
+    <li><b>Wasit "Kode tidak ditemukan":</b> operator/penyelenggara harus membuat pertandingan itu dulu.</li>
+  </ul>
+
+  <div class="foot">idwt.web.id · Live Taekwondo</div>
+</body>
+</html>
