@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Operator — Skor Taekwondo</title>
+<style>
+  :root{
+    --bg:#0E1116;--panel:#171C24;--line:#2A3242;
+    --chung:#1E6FD9;--chung-dk:#144A92;--hong:#D9261E;--hong-dk:#8F1712;
+    --ink:#F2F5FA;--mut:#8A94A6;--gold:#F5B325;--ok:#25C26E;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+       display:flex;flex-direction:column;min-height:100dvh;user-select:none}
+
+  /* gerbang PIN / kode */
+  .gate{flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px;padding:24px;max-width:420px;margin:0 auto;width:100%}
+  .gate h1{font-size:22px;font-weight:800}
+  .gate p{color:var(--mut);font-size:14px;line-height:1.5}
+  .field label{display:block;font-size:12px;color:var(--mut);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+  .field input{width:100%;padding:14px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:16px}
+  .field{margin-bottom:14px}
+  .code-row{display:flex;gap:8px}
+  .code-row input{flex:1;letter-spacing:.15em;font-weight:700;text-transform:uppercase}
+  .primary{width:100%;padding:15px;border:none;border-radius:10px;background:var(--ok);color:#08130C;font-size:16px;font-weight:800}
+  .ghostbtn{padding:14px;border:1px solid var(--line);border-radius:10px;background:none;color:var(--ink);font-weight:700}
+  .err{color:var(--hong);font-size:13px;min-height:18px}
+
+  .hidden{display:none !important}
+
+  /* konsol */
+  .top{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--line);font-size:13px}
+  .top .code{font-weight:800;letter-spacing:.1em;color:var(--gold)}
+  .top .conn{margin-left:auto;display:flex;align-items:center;gap:6px;color:var(--mut)}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--mut)}
+  .dot.on{background:var(--ok)}
+
+  .board{display:grid;grid-template-columns:1fr auto 1fr;border-bottom:2px solid var(--line)}
+  .oside{padding:12px 8px;text-align:center}
+  .oside.chung{background:linear-gradient(180deg,var(--chung-dk),transparent 140%)}
+  .oside.hong{background:linear-gradient(180deg,var(--hong-dk),transparent 140%)}
+  .oside .nm{font-size:12px;letter-spacing:.15em;color:var(--mut);text-transform:uppercase}
+  .oside .sc{font-size:clamp(48px,16vw,80px);font-weight:800;line-height:1;font-variant-numeric:tabular-nums;transition:transform .15s}
+  .oside.flash .sc{color:var(--gold);transform:scale(1.1)}
+  .omid{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;padding:0 12px}
+  .clock{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums}
+  .clock.brk{color:var(--gold)}
+  .rlabel{font-size:11px;color:var(--mut);letter-spacing:.1em}
+  .gap{text-align:center;font-size:12px;color:var(--mut);padding:6px}
+  .gap.stop{color:var(--gold);font-weight:700}
+
+  .ctrl{padding:12px;display:flex;flex-direction:column;gap:12px;overflow-y:auto}
+  .grp-title{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin-bottom:-4px}
+  .row{display:flex;gap:8px}
+  .obtn{border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;color:var(--ink);background:var(--line);flex:1}
+  .obtn:active{filter:brightness(1.4)}
+  .obtn.go{background:var(--ok);color:#08130C}
+  .obtn.warn{background:var(--gold);color:#1A1206}
+  .obtn.gj-c{background:var(--chung)}
+  .obtn.gj-h{background:var(--hong)}
+  .obtn.ghost{background:none;border:1px solid var(--line)}
+  @media (prefers-reduced-motion:reduce){ .oside .sc{transition:none} }
+</style>
+</head>
+<body>
+
+  <!-- ===== GERBANG ===== -->
+  <div class="gate" id="gate">
+    <h1>Operator</h1>
+    <p>Masukkan PIN, lalu buat atau sambungkan ke kode pertandingan. Kode ini yang dibagikan ke 3 wasit dan penonton.</p>
+    <div class="field">
+      <label>PIN Operator</label>
+      <input id="pinInput" type="password" inputmode="numeric" placeholder="••••" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Kode Pertandingan</label>
+      <div class="code-row">
+        <input id="codeInput" type="text" placeholder="TKD-1234" autocomplete="off">
+        <button class="ghostbtn" id="btnGen">Acak</button>
+      </div>
+    </div>
+    <div class="err" id="gateErr"></div>
+    <button class="primary" id="btnEnter">Masuk & Sambungkan</button>
+  </div>
+
+  <!-- ===== KONSOL ===== -->
+  <div class="hidden" id="console" style="flex:1;display:flex;flex-direction:column;min-height:0">
+    <div class="top">
+      Kode: <span class="code" id="codeView">—</span>
+      <span class="conn"><span class="dot" id="connDot"></span><span id="connText">menyambung…</span></span>
+    </div>
+
+    <div class="board">
+      <div class="oside chung" id="sideChung"><div class="nm">Chung</div><div class="sc" id="scoreChung">0</div></div>
+      <div class="omid">
+        <div class="clock" id="clock">2:00</div>
+        <div class="rlabel">RONDE <span id="roundView">1</span>/3</div>
+      </div>
+      <div class="oside hong" id="sideHong"><div class="nm">Hong</div><div class="sc" id="scoreHong">0</div></div>
+    </div>
+    <div class="gap" id="gapView">Selisih 0</div>
+
+    <div class="ctrl">
+      <div class="grp-title">Waktu</div>
+      <div class="row">
+        <button class="obtn go" id="btnStart">Mulai</button>
+        <button class="obtn" id="btnNext">Ronde &rsaquo;</button>
+      </div>
+      <div class="grp-title">Gam-jeom (+1 untuk lawan)</div>
+      <div class="row">
+        <button class="obtn gj-c" id="gjChung">GJ Chung</button>
+        <button class="obtn gj-h" id="gjHong">GJ Hong</button>
+      </div>
+      <div class="grp-title">Koreksi</div>
+      <div class="row"><button class="obtn warn" id="btnUndo" style="flex:1">Batalkan poin terakhir</button></div>
+      <div class="row"><button class="obtn ghost" id="btnReset" style="flex:1">Reset skor & waktu</button></div>
+    </div>
+  </div>
+
+<script type="module">
+import { db } from "./firebase-config.js";
+import { ref, set, update, onValue, onChildAdded, remove, push, serverTimestamp, get }
+  from "https://www.gstatic.com/firebasejs/12.16.0/firebase-database.js";
+
+/* ====== ubah PIN di sini ====== */
+const PIN_OPERATOR = "1234";
+
+/* ====== konfigurasi WT ====== */
+const TEKNIK = {
+  pukulan:1, badan:2, kepala:3, putar_badan:4, putar_kepala:5
+};
+const JENDELA_MS = 1000, WASIT_MINIMAL = 2;
+const RONDE_DETIK = 120, REHAT_DETIK = 60, SELISIH_STOP = 12;
+
+const $ = id => document.getElementById(id);
+let KODE = "", base = null;
+
+/* ====== state pertandingan (operator satu-satunya penulis) ====== */
+let S = { chung:0, hong:0, round:1, phase:"ready", remaining:RONDE_DETIK, endAt:0, lastValid:0 };
+
+function writeState(){ set(ref(db, `matches/${KODE}/state`), S); }
+
+/* ====== gerbang ====== */
+function acakKode(){
+  const n = Math.floor(1000 + Math.random()*9000);
+  $('codeInput').value = `TKD-${n}`;
+}
+$('btnGen').addEventListener('click', acakKode);
+
+$('btnEnter').addEventListener('click', async () => {
+  const pin = $('pinInput').value.trim();
+  let kode = $('codeInput').value.trim().toUpperCase();
+  $('gateErr').textContent = "";
+  if (pin !== PIN_OPERATOR){ $('gateErr').textContent = "PIN salah."; return; }
+  if (!kode){ $('gateErr').textContent = "Isi atau acak kode pertandingan."; return; }
+  KODE = kode;
+  base = ref(db, `matches/${KODE}`);
+
+  // ambil state yang sudah ada (kalau menyambung ulang), kalau tidak ada mulai baru
+  try{
+    const snap = await get(ref(db, `matches/${KODE}/state`));
+    if (snap.exists()) S = Object.assign(S, snap.val());
+    else writeState();
+  }catch(e){ /* biar onValue yang urus koneksi */ }
+
+  masukKonsol();
+});
+
+function masukKonsol(){
+  $('gate').classList.add('hidden');
+  $('console').classList.remove('hidden');
+  $('codeView').textContent = KODE;
+  render(); tickClock();
+  pantauKoneksi();
+  dengarPencet();
+}
+
+/* ====== koneksi ====== */
+function pantauKoneksi(){
+  onValue(ref(db, ".info/connected"), snap => {
+    const on = snap.val() === true;
+    $('connDot').classList.toggle('on', on);
+    $('connText').textContent = on ? "tersambung" : "terputus";
+  });
+}
+
+/* ====== LOGIKA 2-DARI-3: operator dengar kiriman wasit ====== */
+let pending = [];          // {key, judge, side, tech, t, recv}
+const mulaiDengar = Date.now();
+
+function dengarPencet(){
+  onChildAdded(ref(db, `matches/${KODE}/presses`), snap => {
+    const key = snap.key, p = snap.val() || {};
+    // abaikan kiriman lama saat operator baru masuk
+    const t = typeof p.t === "number" ? p.t : Date.now();
+    if (Date.now() - mulaiDengar < 1500 && Date.now() - t > 3000){ remove(ref(db, `matches/${KODE}/presses/${key}`)); return; }
+    prosesPencet(key, p, t);
+  });
+}
+
+function prosesPencet(key, p, t){
+  pending.push({ key, judge:p.judge, side:p.side, tech:p.tech, t, recv:Date.now() });
+  pending = pending.filter(x => Date.now() - x.recv <= JENDELA_MS*3);
+
+  const cocok = pending.filter(x =>
+    x.side === p.side && x.tech === p.tech && Math.abs(x.t - t) <= JENDELA_MS
+  );
+  const judges = new Set(cocok.map(x => x.judge));
+  if (judges.size >= WASIT_MINIMAL){
+    const pts = TEKNIK[p.tech] || 0;
+    beriPoin(p.side, pts);
+    // buang kiriman yang sudah dipakai supaya tidak dihitung ulang
+    cocok.forEach(x => {
+      remove(ref(db, `matches/${KODE}/presses/${x.key}`));
+      pending = pending.filter(y => y.key !== x.key);
+    });
+    // sinyal ke semua wasit bahwa satu poin sah (untuk getar dobel), tanpa angka
+    S.lastValid = Date.now();
+  }
+}
+
+/* ====== poin & skor ====== */
+let riwayat = [];
+function beriPoin(side, pts){
+  if (S.phase === "stopped") return;
+  S[side] += pts;
+  riwayat.push({ side, pts });
+  cekSelisih();
+  writeState(); render(); flash(side);
+}
+function cekSelisih(){
+  const selisih = Math.abs(S.chung - S.hong);
+  if (selisih >= SELISIH_STOP){ S.phase = "stopped"; hentikanClock(); }
+}
+
+/* gam-jeom → +1 lawan */
+$('gjChung').addEventListener('click', () => beriPoin('hong', 1));
+$('gjHong').addEventListener('click',  () => beriPoin('chung', 1));
+
+/* undo */
+$('btnUndo').addEventListener('click', () => {
+  const last = riwayat.pop(); if (!last) return;
+  S[last.side] = Math.max(0, S[last.side] - last.pts);
+  if (S.phase === "stopped" && Math.abs(S.chung-S.hong) < SELISIH_STOP) S.phase = "paused";
+  writeState(); render();
+});
+
+/* reset */
+$('btnReset').addEventListener('click', () => {
+  S = { chung:0, hong:0, round:1, phase:"ready", remaining:RONDE_DETIK, endAt:0, lastValid:0 };
+  riwayat = [];
+  writeState(); render();
+});
+
+/* ====== timer (operator hitung, tulis endAt agar semua layar mulus) ====== */
+let clockTick = null;
+function sisaDetik(){
+  if (S.phase === "running") return Math.max(0, Math.round((S.endAt - Date.now())/1000));
+  return S.remaining;
+}
+function tickClock(){
+  if (clockTick) clearInterval(clockTick);
+  clockTick = setInterval(() => {
+    if (S.phase === "running"){
+      const s = sisaDetik();
+      if (s <= 0){ S.phase = "paused"; S.remaining = 0; writeState(); }
+      renderClock();
+    }
+  }, 250);
+  renderClock();
+}
+function hentikanClock(){ if (S.phase==="running"){ S.remaining = sisaDetik(); S.phase="paused"; } }
+
+$('btnStart').addEventListener('click', () => {
+  if (S.phase === "stopped") return;
+  if (S.phase === "running"){
+    S.remaining = sisaDetik(); S.phase = "paused";
+  } else {
+    if (S.remaining <= 0) S.remaining = (S.phase==="break") ? REHAT_DETIK : RONDE_DETIK;
+    S.endAt = Date.now() + S.remaining*1000; S.phase = "running";
+  }
+  writeState(); render();
+});
+
+$('btnNext').addEventListener('click', () => {
+  if (S.phase === "break"){ S.phase="ready"; S.remaining=RONDE_DETIK; if (S.round<3) S.round++; }
+  else { S.phase="break"; S.remaining=REHAT_DETIK; }
+  S.endAt = 0; writeState(); render();
+});
+
+/* ====== render ====== */
+function render(){
+  $('scoreChung').textContent = S.chung;
+  $('scoreHong').textContent  = S.hong;
+  $('roundView').textContent  = S.round;
+  const selisih = Math.abs(S.chung - S.hong);
+  const g = $('gapView');
+  if (S.phase === "stopped"){ g.textContent = `Selisih ${selisih} — pertandingan dihentikan`; g.classList.add('stop'); }
+  else { g.textContent = `Selisih ${selisih}`; g.classList.remove('stop'); }
+  const b = $('btnStart');
+  b.textContent = S.phase==="running" ? "Jeda" : (S.phase==="stopped" ? "Selesai" : "Mulai");
+  b.classList.toggle('go', S.phase!=="running");
+  renderClock();
+}
+function renderClock(){
+  const s = sisaDetik(), m = Math.floor(s/60);
+  const c = $('clock');
+  c.textContent = `${m}:${String(s%60).padStart(2,'0')}`;
+  c.classList.toggle('brk', S.phase==="break");
+}
+function flash(side){
+  const el = $(side==='chung'?'sideChung':'sideHong');
+  el.classList.add('flash'); setTimeout(()=>el.classList.remove('flash'),300);
+}
+
+acakKode();
+</script>
+</body>
+</html>
