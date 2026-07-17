@@ -157,6 +157,7 @@ $('btnEnter').addEventListener('click', async () => {
   if (!kode){ $('gateErr').textContent = "Isi atau acak kode pertandingan."; return; }
   KODE = kode;
   base = ref(db, `matches/${KODE}`);
+  location.hash = KODE;   // agar refresh menyambung ke pertandingan yang sama
 
   // ambil state yang sudah ada (kalau menyambung ulang), kalau tidak ada mulai baru
   try{
@@ -315,7 +316,9 @@ function flash(side){
   el.classList.add('flash'); setTimeout(()=>el.classList.remove('flash'),300);
 }
 
-acakKode();
+// prefill kode dari URL saat refresh; kalau tidak ada, acak baru
+const hKode = decodeURIComponent(location.hash.replace(/^#/, "")).toUpperCase();
+if (hKode) $('codeInput').value = hKode; else acakKode();
 </script>
 </body>
 </html>
