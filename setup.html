@@ -52,9 +52,7 @@
     <h1>Setup Partai</h1>
     <div class="sub">Halaman penyelenggara. Masuk dengan akun operator untuk membuat pertandingan.</div>
     <div id="loginFields">
-      <label>Email</label>
-      <input id="email" type="email" placeholder="operator@idwt.web.id" autocomplete="username">
-      <label>Password</label>
+      <label>Password operator</label>
       <input id="pass" type="password" placeholder="••••••" autocomplete="current-password">
     </div>
     <div class="msg err" id="gateErr"></div>
@@ -134,18 +132,20 @@ import { signInWithEmailAndPassword, onAuthStateChanged }
 
 const $ = id => document.getElementById(id);
 
+const EMAIL_SETUP = "admin@idwt.web.id";   // akun penyelenggara, TERPISAH dari operator
+
 /* gerbang login */
 $('btnGate').addEventListener('click', async () => {
   if (auth.currentUser){ $('gate').classList.add('hidden'); $('form').classList.remove('hidden'); return; }
-  const email = $('email').value.trim(), pass = $('pass').value;
-  if (!email || !pass){ $('gateErr').textContent = "Masukkan email & password."; return; }
+  const pass = $('pass').value;
+  if (!pass){ $('gateErr').textContent = "Masukkan password."; return; }
   $('gateErr').textContent = "Masuk…";
-  try{ await signInWithEmailAndPassword(auth, email, pass); }
-  catch(e){ $('gateErr').textContent = "Login gagal: email/password salah."; return; }
+  try{ await signInWithEmailAndPassword(auth, EMAIL_SETUP, pass); }
+  catch(e){ $('gateErr').textContent = "Password salah."; return; }
   $('gate').classList.add('hidden'); $('form').classList.remove('hidden');
 });
 $('pass') && $('pass').addEventListener('keydown', e => { if (e.key==='Enter') $('btnGate').click(); });
-onAuthStateChanged(auth, u => { if (u) $('loginFields').style.display = "none"; });
+onAuthStateChanged(auth, u => { if (u){ $('loginFields').style.display = "none"; } });
 
 /* kode acak */
 function acak(){ $('kode').value = `TKD-${Math.floor(1000+Math.random()*9000)}`; }
