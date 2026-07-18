@@ -38,6 +38,30 @@
 </head>
 <body>
 
+<div id="tkdLoader">
+  <div class="tkd-spin">
+    <svg viewBox="0 0 100 100" width="86" height="86" aria-hidden="true">
+      <circle cx="50" cy="50" r="48" fill="#1E6FD9"/>
+      <path d="M50,2 A48,48 0 0,1 50,98 A24,24 0 0,1 50,50 A24,24 0 0,0 50,2 Z" fill="#D9261E"/>
+      <circle cx="50" cy="26" r="7.5" fill="#1E6FD9"/>
+      <circle cx="50" cy="74" r="7.5" fill="#D9261E"/>
+      <circle cx="50" cy="50" r="48" fill="none" stroke="#fff" stroke-width="2.5"/>
+    </svg>
+  </div>
+  <div class="tkd-txt">LIVE TAEKWONDO</div>
+</div>
+<style>
+#tkdLoader{position:fixed;inset:0;background:#0B0E13;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:16px;z-index:99999;transition:opacity .45s}
+#tkdLoader.out{opacity:0;pointer-events:none}
+#tkdLoader .tkd-spin{animation:tkdSpin 1s cubic-bezier(.5,.05,.4,.95) infinite;filter:drop-shadow(0 6px 18px rgba(0,0,0,.5))}
+@keyframes tkdSpin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+#tkdLoader .tkd-txt{font:800 12px system-ui,-apple-system,sans-serif;letter-spacing:.35em;color:#F5B325;animation:tkdPulse 1s ease-in-out infinite}
+@keyframes tkdPulse{0%,100%{opacity:.5}50%{opacity:1}}
+</style>
+<script>window.addEventListener('load',function(){setTimeout(function(){var l=document.getElementById('tkdLoader');if(l){l.classList.add('out');setTimeout(function(){l.remove();},480);}},650);});</script>
+
+
   <div class="mark">LIVE TAEKWONDO</div>
   <h1>Panduan Penggunaan</h1>
   <p class="lead">Papan skor pertandingan taekwondo real-time standar WT · idwt.web.id</p>
