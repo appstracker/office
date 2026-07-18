@@ -50,10 +50,12 @@
   <!-- gerbang PIN -->
   <div class="gate" id="gate">
     <h1>Setup Partai</h1>
-    <div class="sub">Halaman penyelenggara. Masukkan PIN untuk membuat pertandingan.</div>
-    <div>
-      <label>PIN</label>
-      <input id="pin" type="password" inputmode="numeric" placeholder="••••">
+    <div class="sub">Halaman penyelenggara. Masuk dengan akun operator untuk membuat pertandingan.</div>
+    <div id="loginFields">
+      <label>Email</label>
+      <input id="email" type="email" placeholder="operator@idwt.web.id" autocomplete="username">
+      <label>Password</label>
+      <input id="pass" type="password" placeholder="••••••" autocomplete="current-password">
     </div>
     <div class="msg err" id="gateErr"></div>
     <button class="save" id="btnGate">Masuk</button>
@@ -125,18 +127,25 @@
   </div>
 
 <script type="module">
-import { db } from "./firebase-config.js";
+import { db, auth } from "./firebase-config.js";
 import { ref, set, get } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-database.js";
+import { signInWithEmailAndPassword, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 
-const PIN_ADMIN = "1234";   // ganti sesuai kebutuhan
 const $ = id => document.getElementById(id);
 
-/* gerbang */
-$('btnGate').addEventListener('click', () => {
-  if ($('pin').value.trim() !== PIN_ADMIN){ $('gateErr').textContent = "PIN salah."; return; }
+/* gerbang login */
+$('btnGate').addEventListener('click', async () => {
+  if (auth.currentUser){ $('gate').classList.add('hidden'); $('form').classList.remove('hidden'); return; }
+  const email = $('email').value.trim(), pass = $('pass').value;
+  if (!email || !pass){ $('gateErr').textContent = "Masukkan email & password."; return; }
+  $('gateErr').textContent = "Masuk…";
+  try{ await signInWithEmailAndPassword(auth, email, pass); }
+  catch(e){ $('gateErr').textContent = "Login gagal: email/password salah."; return; }
   $('gate').classList.add('hidden'); $('form').classList.remove('hidden');
 });
-$('pin').addEventListener('keydown', e => { if (e.key==='Enter') $('btnGate').click(); });
+$('pass') && $('pass').addEventListener('keydown', e => { if (e.key==='Enter') $('btnGate').click(); });
+onAuthStateChanged(auth, u => { if (u) $('loginFields').style.display = "none"; });
 
 /* kode acak */
 function acak(){ $('kode').value = `TKD-${Math.floor(1000+Math.random()*9000)}`; }
@@ -203,5 +212,6 @@ $('btnSave').addEventListener('click', async () => {
   }
 });
 </script>
+<div style="position:fixed;left:8px;bottom:6px;font-size:10px;color:#5a6472;letter-spacing:.08em;z-index:5;pointer-events:none">V1 &middot; &copy;SRISP 2026</div>
 </body>
 </html>

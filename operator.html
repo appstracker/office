@@ -78,10 +78,12 @@
   <!-- ===== GERBANG ===== -->
   <div class="gate" id="gate">
     <h1>Operator</h1>
-    <p>Masukkan PIN, lalu buat atau sambungkan ke kode pertandingan. Kode ini yang dibagikan ke 3 wasit dan penonton.</p>
-    <div class="field">
-      <label>PIN Operator</label>
-      <input id="pinInput" type="password" inputmode="numeric" placeholder="••••" autocomplete="off">
+    <p>Masuk dengan akun operator, lalu sambungkan ke kode pertandingan (dari penyelenggara). Kode ini yang dibagikan ke 3 wasit.</p>
+    <div class="field" id="loginFields">
+      <label>Email operator</label>
+      <input id="emailInput" type="email" placeholder="operator@idwt.web.id" autocomplete="username">
+      <label style="margin-top:10px;display:block">Password</label>
+      <input id="passInput" type="password" placeholder="••••••" autocomplete="current-password">
     </div>
     <div class="field">
       <label>Kode Pertandingan</label>
@@ -141,12 +143,11 @@
   </div>
 
 <script type="module">
-import { db } from "./firebase-config.js";
+import { db, auth } from "./firebase-config.js";
 import { ref, set, update, onValue, onChildAdded, remove, push, serverTimestamp, get }
   from "https://www.gstatic.com/firebasejs/12.16.0/firebase-database.js";
-
-/* ====== ubah PIN di sini ====== */
-const PIN_OPERATOR = "1234";
+import { signInWithEmailAndPassword, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 
 /* ====== konfigurasi WT ====== */
 const TEKNIK = {
@@ -172,23 +173,36 @@ function acakKode(){
 $('btnGen').addEventListener('click', acakKode);
 
 $('btnEnter').addEventListener('click', async () => {
-  const pin = $('pinInput').value.trim();
+  const email = $('emailInput').value.trim();
+  const pass  = $('passInput').value;
   let kode = $('codeInput').value.trim().toUpperCase();
   $('gateErr').textContent = "";
-  if (pin !== PIN_OPERATOR){ $('gateErr').textContent = "PIN salah."; return; }
   if (!kode){ $('gateErr').textContent = "Isi atau acak kode pertandingan."; return; }
+
+  // login (lewati jika sudah masuk di perangkat ini)
+  if (!auth.currentUser){
+    if (!email || !pass){ $('gateErr').textContent = "Masukkan email & password operator."; return; }
+    $('gateErr').textContent = "Masuk…";
+    try{ await signInWithEmailAndPassword(auth, email, pass); }
+    catch(e){ $('gateErr').textContent = "Login gagal: email/password salah."; return; }
+  }
+
   KODE = kode;
   base = ref(db, `matches/${KODE}`);
-  location.hash = KODE;   // agar refresh menyambung ke pertandingan yang sama
+  location.hash = KODE;
 
-  // ambil state yang sudah ada (kalau menyambung ulang), kalau tidak ada mulai baru
   try{
     const snap = await get(ref(db, `matches/${KODE}/state`));
     if (snap.exists()) S = Object.assign(S, snap.val());
     else writeState();
-  }catch(e){ /* biar onValue yang urus koneksi */ }
+  }catch(e){}
 
   masukKonsol();
+});
+
+// kalau sudah login (sesi tersimpan), sembunyikan kolom email/password
+onAuthStateChanged(auth, u => {
+  if (u) $('loginFields').style.display = "none";
 });
 
 function masukKonsol(){
@@ -358,5 +372,6 @@ function pasangBack(){
   window.addEventListener('popstate', () => { history.pushState({ op:true }, ""); mintaKeluar(); });
 }
 </script>
+<div style="position:fixed;left:8px;bottom:6px;font-size:10px;color:#5a6472;letter-spacing:.08em;z-index:5;pointer-events:none">V1 &middot; &copy;SRISP 2026</div>
 </body>
 </html>

@@ -1,6 +1,7 @@
-// firebase-config.js — dipakai bersama oleh operator.html, wasit.html, tamu.html
+// firebase-config.js — dipakai bersama oleh index (tamu), operator, wasit, setup
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import { getDatabase } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-database.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA8iriYJKwKRwkUSCFCtg6dNi8k0z-4fq8",
@@ -14,3 +15,4 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const db = getDatabase(app);
+export const auth = getAuth(app);

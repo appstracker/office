@@ -46,6 +46,20 @@
   .col.chung .btn{background:var(--chung)}
   .col.hong  .btn{background:var(--hong)}
   .btn:active{filter:brightness(1.45)}
+
+  /* tombol keluar + modal */
+  .exit{margin-left:8px;background:none;border:1px solid var(--line);color:var(--mut);
+        border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700}
+  .exit.hide{display:none}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:24px;z-index:20}
+  .modal.on{display:flex}
+  .modal .box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;max-width:340px;width:100%;text-align:center}
+  .modal .box p{font-size:15px;line-height:1.5;margin-bottom:16px}
+  .modal .box .btns{display:flex;gap:8px}
+  .modal .box button{flex:1;padding:13px;border:none;border-radius:10px;font-size:15px;font-weight:700}
+  .modal .box .yes{background:var(--hong);color:#fff}
+  .modal .box .no{background:var(--line);color:var(--ink)}
+  .modal .box .ok{background:var(--gold);color:#1A1206}
 </style>
 </head>
 <body>
@@ -75,11 +89,20 @@
     <div class="bar">
       Kode <b id="codeView">—</b> · W<b id="jView">—</b> · R<b id="roundView">–</b> · <b id="clockView">–:––</b>
       <span class="conn"><span class="dot" id="connDot"></span><span id="connText">…</span></span>
+      <button class="exit" id="btnExit">Keluar</button>
     </div>
     <div class="status" id="status">Tekan saat serangan sah</div>
     <div class="pad">
       <div class="col chung" id="colChung"><div class="head">Chung</div></div>
       <div class="col hong"  id="colHong"><div class="head">Hong</div></div>
+    </div>
+  </div>
+
+  <!-- modal konfirmasi keluar -->
+  <div class="modal" id="modal">
+    <div class="box">
+      <p id="modalMsg">Keluar dari tugas wasit?</p>
+      <div class="btns" id="modalBtns"></div>
     </div>
   </div>
 
@@ -138,6 +161,7 @@ function masuk(){
   dengarValid();
   dengarWaktu();
   wakeLock();
+  pasangBack();
 }
 
 // coba masuk otomatis dari URL saat refresh: #KODE.NOMOR
@@ -201,6 +225,8 @@ function dengarWaktu(){
   onValue(ref(db, `matches/${KODE}/state`), snap => {
     stateWaktu = snap.val() || null;
     if (stateWaktu) $('roundView').textContent = stateWaktu.round || 1;
+    // kunci: saat pertandingan berjalan, tombol keluar disembunyikan
+    $('btnExit').classList.toggle('hide', stateWaktu && stateWaktu.phase === "running");
     renderWaktu();
   });
   setInterval(renderWaktu, 250);
@@ -227,7 +253,42 @@ async function wakeLock(){
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState==='visible') wakeLock(); });
 
+/* ====== keluar / tombol back ====== */
+const sedangBerjalan = () => stateWaktu && stateWaktu.phase === "running";
+
+function tutupModal(){ $('modal').classList.remove('on'); }
+function keluarSekarang(){
+  location.hash = "";
+  location.reload();
+}
+function mintaKeluar(){
+  if (sedangBerjalan()){
+    // terkunci: tidak boleh keluar saat pertandingan berjalan
+    $('modalMsg').textContent = "Pertandingan sedang berjalan. Tidak bisa keluar sampai waktu dijeda operator.";
+    $('modalBtns').innerHTML = `<button class="ok" id="mOk">Mengerti</button>`;
+    $('modal').classList.add('on');
+    $('mOk').onclick = tutupModal;
+    return;
+  }
+  $('modalMsg').textContent = "Keluar dari tugas wasit?";
+  $('modalBtns').innerHTML = `<button class="no" id="mNo">Batal</button><button class="yes" id="mYes">Keluar</button>`;
+  $('modal').classList.add('on');
+  $('mNo').onclick = tutupModal;
+  $('mYes').onclick = keluarSekarang;
+}
+$('btnExit').addEventListener('click', mintaKeluar);
+
+/* cegat tombol back HP */
+function pasangBack(){
+  history.pushState({ wasit:true }, "");
+  window.addEventListener('popstate', () => {
+    history.pushState({ wasit:true }, ""); // tetap di halaman
+    mintaKeluar();
+  });
+}
+
 autoMasuk();   // sambung ulang otomatis jika ada kode di URL
 </script>
+<div style="position:fixed;left:8px;bottom:6px;font-size:10px;color:#5a6472;letter-spacing:.08em;z-index:5;pointer-events:none">V1 &middot; &copy;SRISP 2026</div>
 </body>
 </html>

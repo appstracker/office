@@ -136,11 +136,12 @@
   </ul>
 
   <div class="box warn">
-    <b>⚠ Sebelum dipakai pertandingan sungguhan</b>
+    <b>Keamanan &amp; status</b>
     <ul>
-      <li><b>Ganti PIN</b> default. PIN ada di dalam file <code>operator.html</code> dan <code>setup.html</code> (baris <code>PIN_OPERATOR</code> / <code>PIN_ADMIN</code>).</li>
-      <li><b>Kunci Firebase Rules.</b> Saat ini database masih terbuka untuk pengujian — perlu dibatasi agar tamu hanya bisa membaca. <span class="pill">belum</span></li>
+      <li><b>Login akun.</b> Operator &amp; penyelenggara masuk dengan <b>email + password</b> (akun dibuat di Firebase Console → Authentication). PIN lama sudah tidak dipakai. <span class="pill">aktif</span></li>
+      <li><b>Firebase Rules terkunci.</b> Hanya yang login bisa mengubah skor; tamu baca-saja; wasit hanya bisa mengirim tekanan. <span class="pill">aktif</span></li>
       <li><b>Best-of-3 (#WON)</b> belum aktif; penghitung ronde masih 0. <span class="pill">menyusul</span></li>
+      <li><b>Celah tekanan wasit.</b> Wasit tanpa login, jadi orang yang tahu kode secara teori bisa kirim tekanan palsu. Bisa ditutup dengan PIN wasit per pertandingan. <span class="pill">opsional</span></li>
     </ul>
   </div>
 
@@ -153,5 +154,6 @@
   </ul>
 
   <div class="foot">idwt.web.id · Live Taekwondo</div>
+<div style="position:fixed;left:8px;bottom:6px;font-size:10px;color:#5a6472;letter-spacing:.08em;z-index:5;pointer-events:none">V1 &middot; &copy;SRISP 2026</div>
 </body>
 </html>
