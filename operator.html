@@ -78,18 +78,15 @@
   <!-- ===== GERBANG ===== -->
   <div class="gate" id="gate">
     <h1>Operator</h1>
-    <p>Masuk dengan akun operator, lalu sambungkan ke kode pertandingan (dari penyelenggara). Kode ini yang dibagikan ke 3 wasit.</p>
+    <p>Masuk dengan password operator, lalu sambungkan ke kode pertandingan yang sudah dibuat penyelenggara.</p>
     <div class="field" id="loginFields">
-      <label>Email operator</label>
-      <input id="emailInput" type="email" placeholder="operator@idwt.web.id" autocomplete="username">
-      <label style="margin-top:10px;display:block">Password</label>
+      <label>Password operator</label>
       <input id="passInput" type="password" placeholder="••••••" autocomplete="current-password">
     </div>
     <div class="field">
       <label>Kode Pertandingan</label>
       <div class="code-row">
         <input id="codeInput" type="text" placeholder="TKD-1234" autocomplete="off">
-        <button class="ghostbtn" id="btnGen">Acak</button>
       </div>
     </div>
     <div class="err" id="gateErr"></div>
@@ -134,7 +131,7 @@
   <!-- modal konfirmasi keluar -->
   <div class="modal" id="modal">
     <div class="box">
-      <p id="modalMsg">Keluar dari panel operator? Skor pertandingan tetap tersimpan.</p>
+      <p id="modalMsg">Keluar & logout dari akun operator? Skor pertandingan tetap tersimpan di server.</p>
       <div class="btns">
         <button class="no" id="mNo">Batal</button>
         <button class="yes" id="mYes">Keluar</button>
@@ -146,7 +143,7 @@
 import { db, auth } from "./firebase-config.js";
 import { ref, set, update, onValue, onChildAdded, remove, push, serverTimestamp, get }
   from "https://www.gstatic.com/firebasejs/12.16.0/firebase-database.js";
-import { signInWithEmailAndPassword, onAuthStateChanged }
+import { signInWithEmailAndPassword, onAuthStateChanged, signOut }
   from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 
 /* ====== konfigurasi WT ====== */
@@ -166,43 +163,46 @@ let S = { chung:0, hong:0, round:1, phase:"ready", remaining:RONDE_DETIK, endAt:
 function writeState(){ set(ref(db, `matches/${KODE}/state`), S); }
 
 /* ====== gerbang ====== */
-function acakKode(){
-  const n = Math.floor(1000 + Math.random()*9000);
-  $('codeInput').value = `TKD-${n}`;
-}
-$('btnGen').addEventListener('click', acakKode);
+const EMAIL_OPERATOR = "operator@idwt.web.id";   // email tetap; operator cukup password
 
-$('btnEnter').addEventListener('click', async () => {
-  const email = $('emailInput').value.trim();
-  const pass  = $('passInput').value;
-  let kode = $('codeInput').value.trim().toUpperCase();
+$('btnEnter').addEventListener('click', () => masukAlur(
+  $('codeInput').value.trim().toUpperCase(),
+  $('passInput').value
+));
+
+async function masukAlur(kode, pass){
   $('gateErr').textContent = "";
-  if (!kode){ $('gateErr').textContent = "Isi atau acak kode pertandingan."; return; }
+  if (!kode){ $('gateErr').textContent = "Isi kode pertandingan."; return; }
 
-  // login (lewati jika sudah masuk di perangkat ini)
+  // login bila belum ada sesi
   if (!auth.currentUser){
-    if (!email || !pass){ $('gateErr').textContent = "Masukkan email & password operator."; return; }
+    if (!pass){ $('gateErr').textContent = "Masukkan password operator."; return; }
     $('gateErr').textContent = "Masuk…";
-    try{ await signInWithEmailAndPassword(auth, email, pass); }
-    catch(e){ $('gateErr').textContent = "Login gagal: email/password salah."; return; }
+    try{ await signInWithEmailAndPassword(auth, EMAIL_OPERATOR, pass); }
+    catch(e){ $('gateErr').textContent = "Password salah."; return; }
   }
+
+  // WAJIB: pertandingan harus sudah dibuat penyelenggara
+  $('gateErr').textContent = "Memeriksa kode…";
+  let snap;
+  try{ snap = await get(ref(db, `matches/${kode}/state`)); }
+  catch(e){ $('gateErr').textContent = "Gagal menghubungi server."; return; }
+  if (!snap.exists()){ $('gateErr').textContent = "Kode tidak ditemukan. Buat partai dulu di halaman Setup."; return; }
 
   KODE = kode;
   base = ref(db, `matches/${KODE}`);
   location.hash = KODE;
-
-  try{
-    const snap = await get(ref(db, `matches/${KODE}/state`));
-    if (snap.exists()) S = Object.assign(S, snap.val());
-    else writeState();
-  }catch(e){}
-
+  S = Object.assign(S, snap.val());
   masukKonsol();
-});
+}
 
-// kalau sudah login (sesi tersimpan), sembunyikan kolom email/password
+// sesi tersimpan → sembunyikan password; auto-masuk bila kode ada di URL (refresh aman)
 onAuthStateChanged(auth, u => {
-  if (u) $('loginFields').style.display = "none";
+  if (u){
+    $('loginFields').style.display = "none";
+    const hk = decodeURIComponent(location.hash.replace(/^#/,"")).toUpperCase();
+    if (hk && !KODE){ $('codeInput').value = hk; masukAlur(hk, ""); }
+  }
 });
 
 function masukKonsol(){
@@ -364,7 +364,7 @@ if (hKode) $('codeInput').value = hKode; else acakKode();
 function mintaKeluar(){ $('modal').classList.add('on'); }
 $('btnExit').addEventListener('click', mintaKeluar);
 $('mNo').addEventListener('click', () => $('modal').classList.remove('on'));
-$('mYes').addEventListener('click', () => { location.hash = ""; location.reload(); });
+$('mYes').addEventListener('click', async () => { try{ await signOut(auth); }catch(e){} location.hash = ""; location.reload(); });
 
 // cegat tombol back HP setelah masuk konsol
 function pasangBack(){
