@@ -548,10 +548,12 @@ function akhiriRonde(){
 }
 function prosesRonde(w){
   $('modalRound').classList.remove('on');
+  tulisRonde(w);   // arsipkan skor ronde ini SEBELUM direset
   S['won'+cap(w)] = (S['won'+cap(w)]||0) + 1;
   if (S['won'+cap(w)] >= 2){
     S.matchOver = true; S.winner = w; S.phase = "over";
     if (clockTick){ clearInterval(clockTick); clockTick=null; }
+    tulisHasil();
     writeState(); render(); return;
   }
   // lanjut ronde berikutnya: skor & statistik per-ronde direset, #WON tetap
@@ -696,8 +698,29 @@ $('wYes').addEventListener('click', () => {
   hentikanClock();
   if (clockTick){ clearInterval(clockTick); clockTick = null; }
   S.matchOver = true; S.winner = winPilih; S.phase = "over";
+  if ((S.chung||0) > 0 || (S.hong||0) > 0) tulisRonde(winPilih);  // ronde berjalan ikut diarsipkan
+  tulisHasil();
   writeState(); render();
 });
+
+/* ====== penulisan hasil otomatis → arsip hasil.html (butuh izin Rules: results & rounds) ====== */
+let META = null;
+function tulisRonde(pemenang){
+  set(ref(db, `matches/${KODE}/rounds/r${S.round}`), {
+    round: S.round, chung: S.chung || 0, hong: S.hong || 0, winner: pemenang
+  }).catch(e => console.warn('rounds gagal tersimpan:', e && e.message));
+}
+function tulisHasil(){
+  const m = META || {};
+  set(ref(db, `results/${KODE}`), {
+    kode: KODE,
+    no: m.no || "", category: m.category || "",
+    chungName: (m.chung && m.chung.name) || "Chung",
+    hongName: (m.hong && m.hong.name) || "Hong",
+    wonChung: S.wonChung || 0, wonHong: S.wonHong || 0,
+    winner: S.winner || "", selesai: Date.now()
+  }).catch(e => console.warn('hasil gagal tersimpan:', e && e.message));
+}
 
 /* ====== statistik per-ronde & log kejadian ====== */
 let logSkor = [], seqLog = 0;
@@ -815,6 +838,7 @@ const esc = t => String(t == null ? '' : t).replace(/[<>&"]/g, c => ({'<':'&lt;'
 function dengarMeta(){
   onValue(ref(db, `matches/${KODE}/meta`), snap => {
     const m = snap.val() || {};
+    META = m;
     $('matchTitle').textContent =
       [m.no, m.category].filter(Boolean).join(' \u00b7 ') || 'M12H \u00b7 WORLD TAEKWONDO';
     isiSisi('C', m.chung); isiSisi('H', m.hong);
