@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Live Taekwondo — idwt.web.id</title>
-<!-- Mengganti font dengan gaya modern yang tegas ala scoreboard digital -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Oswald:wght@600;700&display=swap" rel="stylesheet">
@@ -26,72 +25,73 @@
   .live{flex:1;display:none;flex-direction:column;min-height:0}
   .live.on{display:flex}
 
-  /* Header Atas: Kategori & Nomor Partai (Menyerupai "1/4+ChildMale-25KG") */
-  .head{display:flex;align-items:center;justify-content:center;gap:14px;padding:8px 10px;background:#000000;border-bottom:2px solid #1a212c;min-height:42px}
-  .head .cat{font-family:'Oswald',sans-serif;font-size:clamp(16px,2.8vw,26px);font-weight:700;letter-spacing:.06em;color:#fff}
-  .head .no{font-size:clamp(12px,2vw,16px);color:var(--gold);font-weight:800;letter-spacing:.08em;display:none} /* Dibuat fleksibel */
+  /* Header Paling Atas: Kategori Partai */
+  .head{display:flex;align-items:center;justify-content:center;gap:14px;padding:6px 10px;background:#000000;border-bottom:2px solid #1a212c;min-height:36px;flex-shrink:0}
+  .head .cat{font-family:'Oswald',sans-serif;font-size:clamp(15px,2.6vw,22px);font-weight:700;letter-spacing:.06em;color:#fff}
+  .head .no{font-size:clamp(12px,2vw,15px);color:var(--gold);font-weight:800;letter-spacing:.08em}
   .head.hide{display:none}
+
+  /* Banner Pemenang / Peringatan */
+  .banner{text-align:center;padding:6px;font-size:clamp(12px,2.4vw,16px);font-weight:900;letter-spacing:.05em;background:var(--gold);color:#1A1206;display:none;flex-shrink:0}
+  .banner.on{display:block}
+  .banner.win{background:var(--ok);color:#08130C}
 
   /* Dua Sisi Arena (Biru & Merah) */
   .grid{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0;position:relative}
   .team{display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:8px;transition:background .2s}
   
-  /* Gradien latar belakang warna khas Chung & Hong */
-  .team.chung{background:linear-gradient(135deg, #103875 0%, #0d1e38 60%, #080d16 100%)}
-  .team.hong{background:linear-gradient(135deg, #821410 0%, #3d0c0a 60%, #160808 100%)}
+  .team.chung{background:linear-gradient(165deg, #123d7a 0%, #0a172c 70%, #060910 100%)}
+  .team.hong{background:linear-gradient(165deg, #821410 0%, #300a08 70%, #100606 100%)}
 
-  /* Bagian Atas Sisi (Nama, Wilayah/Negara, dan Bendera) */
-  .team .top{display:flex;flex-direction:row;align-items:center;justify-content:space-between;position:absolute;top:10px;left:15px;right:15px;padding:0 5px}
-  
-  .team .info-box{display:flex;flex-direction:column;gap:2px;}
-  .team.chung .info-box{align-items:flex-start;}
-  .team.hong .info-box{align-items:flex-end;}
+  /* Bagian Atas Sisi (Nama, Wilayah/Negara, dan Bendera) - Diberi jarak agar tidak tertutupi kotak tengah */
+  .team .top{display:flex;align-items:flex-start;position:absolute;top:10px;left:10px;right:10px;gap:8px;z-index:2}
+  .team.chung .top{justify-content:flex-start; padding-right: 95px;} /* Beri ruang untuk kotak tengah di tengah */
+  .team.hong .top{justify-content:flex-end; padding-left: 95px;}
 
-  .team .nm{font-family:'Montserrat',sans-serif;font-size:clamp(22px,5.5vw,52px);font-weight:900;line-height:1.1;text-transform:uppercase;letter-spacing:.02em}
+  .team .info-box{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .team.chung .info-box{align-items:flex-start;text-align:left}
+  .team.hong .info-box{align-items:flex-end;text-align:right}
+
+  .team .nm{font-family:'Montserrat',sans-serif;font-size:clamp(14px,3vw,26px);font-weight:900;line-height:1.1;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%}
   .team.chung .nm{color:#FFFFFF}.team.hong .nm{color:#FFFFFF}
   
-  .team .ctry{font-size:clamp(12px,2.2vw,18px);color:var(--mut);font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+  .team .ctry{font-size:clamp(10px,1.8vw,14px);color:var(--mut);font-weight:700;letter-spacing:.05em;text-transform:uppercase}
   
   /* Bendera Negara */
-  .team .img{width:clamp(45px,7vw,75px);height:clamp(30px,4.8vw,50px);object-fit:cover;border-radius:4px;border:1px solid rgba(255,255,255,.3);display:none;box-shadow:0 2px 6px rgba(0,0,0,0.3)}
+  .team .img{width:clamp(36px,5.5vw,56px);height:clamp(24px,3.8vw,38px);object-fit:cover;border-radius:3px;border:1px solid rgba(255,255,255,.3);display:none;flex-shrink:0;box-shadow:0 2px 5px rgba(0,0,0,0.3)}
   .team .img.on{display:block}
 
-  /* Skor Utama (Angka 6 dan 8 yang sangat besar) */
-  .team .sc{font-family:'Montserrat',sans-serif;font-size:clamp(110px,30vw,260px);font-weight:900;line-height:.9;font-variant-numeric:tabular-nums;margin-top:20px;text-shadow: 0 4px 20px rgba(0,0,0,0.4)}
+  /* Skor Utama (Angka besar di tengah area masing-masing) */
+  .team .sc{font-family:'Montserrat',sans-serif;font-size:clamp(90px,26vw,220px);font-weight:900;line-height:.9;font-variant-numeric:tabular-nums;margin-top:15px;text-shadow: 0 4px 20px rgba(0,0,0,0.4)}
   .team.bump .sc{animation:bump .4s}
   @keyframes bump{0%{transform:scale(1)}30%{transform:scale(1.16);color:var(--gold)}100%{transform:scale(1)}}
 
-  /* Statistik bawah tiap sisi (Gam-jeom, Hits, #Won) */
-  .stats{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:clamp(15px,3vw,35px)}
+  /* Statistik bawah tiap sisi */
+  .stats{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:clamp(12px,2.5vw,30px);z-index:2}
   .stat{text-align:center}
-  .stat .k{font-size:clamp(10px,1.5vw,13px);letter-spacing:.1em;color:var(--mut);font-weight:700;text-transform:uppercase}
-  .stat .v{font-family:'Montserrat',sans-serif;font-size:clamp(18px,3.8vw,32px);font-weight:900;font-variant-numeric:tabular-nums}
+  .stat .k{font-size:clamp(9px,1.4vw,12px);letter-spacing:.1em;color:var(--mut);font-weight:700;text-transform:uppercase}
+  .stat .v{font-family:'Montserrat',sans-serif;font-size:clamp(16px,3.2vw,28px);font-weight:900;font-variant-numeric:tabular-nums}
   .stat.won .v{color:var(--gold)}
 
-  /* Kotak Tengah: Nomor Match (A1001) dan Timer (0:36) */
-  .center{position:absolute;left:50%;top:0;transform:translateX(-50%);
+  /* Kotak Tengah: Menggantung pas di atas perbatasan grid tanpa menutupi nama */
+  .center{position:absolute;left:50%;top:6px;transform:translateX(-50%);
           display:flex;flex-direction:column;align-items:stretch;
-          background:#000000;width:clamp(140px,22vw,220px);border-radius:0 0 12px 12px;border:2px solid #222b38;border-top:none;z-index:3;box-shadow:0 6px 20px rgba(0,0,0,0.6);overflow:hidden}
+          background:#000000;width:clamp(130px,20vw,190px);border-radius:10px;border:2px solid #222b38;z-index:5;box-shadow:0 6px 20px rgba(0,0,0,0.7);overflow:hidden}
   
-  .center .match-box{background:#000;padding:6px 4px;text-align:center;border-bottom:2px solid #222b38}
-  .center .match-title{font-size:clamp(14px,2.2vw,20px);font-weight:900;letter-spacing:.08em;color:#fff}
-  .center .match-label{font-size:clamp(9px,1.4vw,12px);font-weight:700;letter-spacing:.15em;color:var(--mut)}
+  .center .match-box{background:#000;padding:5px 4px;text-align:center;border-bottom:2px solid #222b38}
+  .center .match-title{font-size:clamp(13px,2vw,18px);font-weight:900;letter-spacing:.08em;color:#fff}
+  .center .match-label{font-size:clamp(8px,1.2vw,11px);font-weight:700;letter-spacing:.15em;color:var(--mut)}
 
-  .center .clock-box{background:var(--gold);padding:6px 4px;text-align:center}
-  .center .clock{font-family:'Montserrat',sans-serif;font-size:clamp(28px,6vw,56px);font-weight:900;font-variant-numeric:tabular-nums;line-height:1;color:#1A1206}
+  .center .clock-box{background:var(--gold);padding:5px 4px;text-align:center}
+  .center .clock{font-family:'Montserrat',sans-serif;font-size:clamp(24px,5.5vw,46px);font-weight:900;font-variant-numeric:tabular-nums;line-height:1;color:#1A1206}
   .center .clock.brk{color:#D9261E}
 
-  .center .round-box{background:#000;padding:6px 4px;text-align:center}
-  .center .rnd{font-size:clamp(10px,1.5vw,13px);font-weight:700;letter-spacing:.15em;color:var(--mut);text-transform:uppercase}
+  .center .round-box{background:#000;padding:5px 4px;text-align:center}
+  .center .rnd{font-size:clamp(9px,1.3vw,12px);font-weight:700;letter-spacing:.15em;color:var(--mut);text-transform:uppercase}
   .center .rnd span{color:#fff;font-weight:900}
 
-  /* Banner Pemenang / Peringatan */
-  .banner{text-align:center;padding:8px;font-size:clamp(13px,2.6vw,18px);font-weight:900;letter-spacing:.05em;background:var(--gold);color:#1A1206;display:none}
-  .banner.on{display:block}
-  .banner.win{background:var(--ok);color:#08130C}
-
   /* Footer Bawah */
-  .foot{display:flex;align-items:center;gap:8px;padding:5px 14px;font-size:11px;color:var(--mut);border-top:1px solid #1a212c;background:#05070a}
+  .foot{display:flex;align-items:center;gap:8px;padding:5px 14px;font-size:11px;color:var(--mut);border-top:1px solid #1a212c;background:#05070a;flex-shrink:0}
   .foot .dot{width:8px;height:8px;border-radius:50%;background:var(--mut)}
   .foot .dot.on{background:var(--ok)}
   .foot .brand{margin-left:auto;letter-spacing:.1em}
@@ -136,22 +136,36 @@
   <div class="live" id="live">
     <!-- Header Utama Kategori / Turnamen -->
     <div class="head" id="head">
-      <span class="cat" id="cat"></span>
+      <span class="cat" id="cat">Festival</span>
       <span class="no" id="no"></span>
     </div>
     <div class="banner" id="banner"></div>
     
     <div class="grid">
+      <!-- KOTAK TENGAH (NOMOR MATCH, TIMER, DAN ROUND) PINDAH KE ATAS GRID -->
+      <div class="center">
+        <div class="match-box">
+          <div class="match-title" id="matchCode">A0001</div>
+          <div class="match-label">MATCH</div>
+        </div>
+        <div class="clock-box">
+          <div class="clock" id="clock">1:53</div>
+        </div>
+        <div class="round-box">
+          <div class="rnd"><span id="round">2</span> ROUND</div>
+        </div>
+      </div>
+
       <!-- SISI KIRI (CHUNG / BLUE) -->
       <div class="team chung" id="teamChung">
         <div class="top">
           <img class="img" id="imgChung" alt="">
           <div class="info-box">
-            <div class="nm" id="nmChung">Jim</div>
-            <div class="ctry" id="ctryChung">Washington</div>
+            <div class="nm" id="nmChung">Hanief Safaraz</div>
+            <div class="ctry" id="ctryChung">UIN Ar-Raniri</div>
           </div>
         </div>
-        <div class="sc" id="scChung">0</div>
+        <div class="sc" id="scChung">2</div>
         <div class="stats" id="statChung"></div>
       </div>
 
@@ -159,32 +173,18 @@
       <div class="team hong" id="teamHong">
         <div class="top">
           <div class="info-box">
-            <div class="nm" id="nmHong">LeSai</div>
-            <div class="ctry" id="ctryHong">New York</div>
+            <div class="nm" id="nmHong">Abdullah Shie</div>
+            <div class="ctry" id="ctryHong">GI-EXCO</div>
           </div>
           <img class="img" id="imgHong" alt="">
         </div>
         <div class="sc" id="scHong">0</div>
         <div class="stats" id="statHong"></div>
       </div>
-
-      <!-- KOTAK TENGAH (NOMOR MATCH, TIMER, DAN ROUND) -->
-      <div class="center">
-        <div class="match-box">
-          <div class="match-title" id="matchCode">A1001</div>
-          <div class="match-label">MATCH</div>
-        </div>
-        <div class="clock-box">
-          <div class="clock" id="clock">0:36</div>
-        </div>
-        <div class="round-box">
-          <div class="rnd"><span id="round">1</span> ROUND</div>
-        </div>
-      </div>
     </div>
 
     <div class="foot">
-      <span class="dot" id="dot"></span><span id="connText">menyambung…</span>
+      <span class="dot" id="dot"></span><span id="connText">tersambung</span>
       <span class="brand">idwt.web.id &middot; V1 &middot; &copy;SRISP 2026</span>
     </div>
   </div>
@@ -229,13 +229,13 @@ function pasang(kode){
 }
 
 function renderMeta(m){
-  $('cat').textContent = m.category || "";
-  $('matchCode').textContent = m.no ? "A" + String(m.no).padStart(4, '0') : "A1001"; // Default menyesuaikan gambar
+  $('cat').textContent = m.category || "Festival";
+  $('matchCode').textContent = m.no ? "A" + String(m.no).padStart(4, '0') : "A0001";
   const c=m.chung||{}, h=m.hong||{};
-  $('nmChung').textContent = c.name || "Jim";
-  $('nmHong').textContent  = h.name || "LeSai";
-  $('ctryChung').textContent = c.country || "Washington";
-  $('ctryHong').textContent  = h.country || "New York";
+  $('nmChung').textContent = c.name || "Hanief Safaraz";
+  $('nmHong').textContent  = h.name || "Abdullah Shie";
+  $('ctryChung').textContent = c.country || "UIN Ar-Raniri";
+  $('ctryHong').textContent  = h.country || "GI-EXCO";
   setImg('imgChung', c.img); setImg('imgHong', h.img);
   applyConfig();
 }
@@ -260,7 +260,7 @@ function renderState(st){
   prev={chung:st.chung||0,hong:st.hong||0}; pertama=false;
   $('scChung').textContent=st.chung||0;
   $('scHong').textContent =st.hong||0;
-  $('round').textContent  =st.round||1;
+  $('round').textContent  =st.round||2;
 
   const b=$('banner');
   if(st.matchOver && st.winner){ b.textContent="PEMENANG: "+(st.winner==="chung"?($('nmChung').textContent):($('nmHong').textContent)); b.className="banner win on"; }
@@ -288,7 +288,7 @@ function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
 function fmt(sec){ const m=Math.floor(sec/60); return `${m}:${String(sec%60).padStart(2,'0')}`; }
 function renderClock(){
   const s=cur; if(!s)return;
-  let sec = s.phase==="running" ? Math.max(0,Math.round((s.endAt-Date.now())/1000)) : (s.remaining??36);
+  let sec = s.phase==="running" ? Math.max(0,Math.round((s.endAt-Date.now())/1000)) : (s.remaining??113);
   if(prevRem!==null && prevRem>0 && sec===0 && s.phase==="running" && !sudahBel){ bunyiBel(); sudahBel=true; }
   if(sec>0) sudahBel=false; prevRem=sec;
   const c=$('clock'); c.textContent=fmt(sec); c.classList.toggle('brk', s.phase==="break");
