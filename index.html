@@ -25,74 +25,72 @@
   .live{flex:1;display:none;flex-direction:column;min-height:0}
   .live.on{display:flex}
 
-  /* Header Paling Atas (Kategori Partai) */
-  .head{display:flex;align-items:center;justify-content:center;gap:14px;padding:8px 10px;background:#000000;border-bottom:2px solid #1a212c;min-height:40px;flex-shrink:0}
-  .head .cat{font-family:'Oswald',sans-serif;font-size:clamp(18px,3vw,30px);font-weight:700;letter-spacing:.08em;color:#fff}
-  .head .no{font-size:clamp(14px,2.2vw,20px);color:var(--gold);font-weight:800;letter-spacing:.08em}
+  /* Header Paling Atas (Kategori / Nama Partai) */
+  .head{display:flex;align-items:center;justify-content:center;gap:16px;padding:6px 12px;background:#000000;border-bottom:2px solid #1a212c;min-height:38px;flex-shrink:0}
+  .head .cat{font-family:'Oswald',sans-serif;font-size:clamp(16px,2.5vw,26px);font-weight:700;letter-spacing:.08em;color:#fff}
+  .head .no{font-size:clamp(12px,2vw,18px);color:var(--gold);font-weight:800;letter-spacing:.08em}
   .head.hide{display:none}
 
   /* Banner Pemenang / Peringatan */
-  .banner{text-align:center;padding:8px;font-size:clamp(14px,2.6vw,20px);font-weight:900;letter-spacing:.05em;background:var(--gold);color:#1A1206;display:none;flex-shrink:0}
+  .banner{text-align:center;padding:6px;font-size:clamp(13px,2.2vw,18px);font-weight:900;letter-spacing:.05em;background:var(--gold);color:#1A1206;display:none;flex-shrink:0}
   .banner.on{display:block}
   .banner.win{background:var(--ok);color:#08130C}
 
-  /* Grid Utama Pembagi Biru & Merah */
-  .grid{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0;position:relative}
+  /* Layout Utama menggunakan Flexbox 3 Kolom (Kiri - Tengah - Kanan) */
+  .grid{flex:1;display:flex;min-height:0;position:relative;background:#05070a}
   
-  .team{display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:10px;transition:background .2s}
+  .team{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:12px;overflow:hidden}
   .team.chung{background:linear-gradient(160deg, #103b7c 0%, #071324 75%, #04070d 100%)}
   .team.hong{background:linear-gradient(160deg, #8c1612 0%, #280807 75%, #0d0404 100%)}
 
   /* Bagian Atas Sisi (Bendera & Nama Atlet) */
-  .team .top{display:flex;align-items:flex-start;position:absolute;top:15px;gap:12px;z-index:2}
-  .team.chung .top{left:20px;}
-  .team.hong .top{right:20px;flex-direction:row-reverse;}
+  .team .top{display:flex;align-items:center;position:absolute;top:12px;gap:10px;z-index:2}
+  .team.chung .top{left:15px;}
+  .team.hong .top{right:15px;flex-direction:row-reverse;}
 
-  .team .flag-box{display:flex;flex-direction:column;align-items:center;gap:4px;}
-  .team .img{width:clamp(50px,8vw,80px);height:clamp(35px,5.5vw,55px);object-fit:cover;border-radius:4px;border:1px solid rgba(255,255,255,.3);display:none;box-shadow:0 3px 8px rgba(0,0,0,0.4)}
+  .team .flag-box{display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .team .img{width:clamp(40px,6vw,70px);height:clamp(28px,4.2vw,48px);object-fit:cover;border-radius:3px;border:1px solid rgba(255,255,255,.3);display:none;box-shadow:0 2px 6px rgba(0,0,0,0.4)}
   .team .img.on{display:block}
-  .team .code{font-size:clamp(11px,1.6vw,14px);font-weight:800;color:var(--mut);letter-spacing:.1em}
+  .team .code{font-size:clamp(10px,1.4vw,13px);font-weight:800;color:var(--mut);letter-spacing:.08em;text-transform:uppercase}
 
-  .team .info-box{display:flex;flex-direction:column;gap:2px;}
+  .team .info-box{display:flex;flex-direction:column;gap:1px;}
   .team.chung .info-box{align-items:flex-start;}
   .team.hong .info-box{align-items:flex-end;text-align:right;}
 
-  .team .nm{font-family:'Montserrat',sans-serif;font-size:clamp(24px,5.5vw,50px);font-weight:900;line-height:1.1;text-transform:uppercase;letter-spacing:.02em;color:#fff}
-  .team .ctry{font-size:clamp(12px,2vw,17px);color:var(--mut);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+  .team .nm{font-family:'Montserrat',sans-serif;font-size:clamp(18px,4vw,42px);font-weight:900;line-height:1.1;text-transform:uppercase;letter-spacing:.02em;color:#fff}
+  .team .ctry{font-size:clamp(11px,1.8vw,15px);color:var(--mut);font-weight:700;letter-spacing:.05em;text-transform:uppercase}
 
-  /* Skor Utama (Angka Sangat Besar di Tengah Lapangan) */
-  .team .sc{font-family:'Montserrat',sans-serif;font-size:clamp(120px,32vw,280px);font-weight:900;line-height:.9;font-variant-numeric:tabular-nums;margin-top:10px;text-shadow: 0 6px 25px rgba(0,0,0,0.5)}
+  /* Skor Utama (Angka Sangat Besar di Tengah Lapangan Sisi) */
+  .team .sc{font-family:'Montserrat',sans-serif;font-size:clamp(90px,24vw,220px);font-weight:900;line-height:.9;font-variant-numeric:tabular-nums;margin-top:10px;text-shadow: 0 4px 20px rgba(0,0,0,0.5)}
   .team.bump .sc{animation:bump .4s}
   @keyframes bump{0%{transform:scale(1)}30%{transform:scale(1.16);color:var(--gold)}100%{transform:scale(1)}}
 
-  /* Statistik Bawah (Gam-jeom, Hits, #Won) */
-  .stats{position:absolute;bottom:15px;display:flex;gap:clamp(15px,3vw,35px);z-index:2}
-  .team.chung .stats{left:25px;}
-  .team.hong .stats{right:25px;}
+  /* Statistik Bawah Sisi (Gam-jeom, Hits, #Won) */
+  .stats{position:absolute;bottom:12px;display:flex;gap:clamp(12px,2.5vw,28px);z-index:2}
+  .team.chung .stats{left:20px;}
+  .team.hong .stats{right:20px;}
   .stat{text-align:center}
-  .stat .k{font-size:clamp(10px,1.5vw,13px);letter-spacing:.1em;color:var(--mut);font-weight:700;text-transform:uppercase}
-  .stat .v{font-family:'Montserrat',sans-serif;font-size:clamp(18px,3.8vw,34px);font-weight:900;font-variant-numeric:tabular-nums}
+  .stat .k{font-size:clamp(9px,1.3vw,11px);letter-spacing:.1em;color:var(--mut);font-weight:700;text-transform:uppercase}
+  .stat .v{font-family:'Montserrat',sans-serif;font-size:clamp(16px,3vw,28px);font-weight:900;font-variant-numeric:tabular-nums}
   .stat.won .v{color:var(--gold)}
 
-  /* KOTAK TENGAH: Presisi Membelah Layar (Match, Timer, Round) */
-  .center{position:absolute;left:50%;top:0;bottom:0;transform:translateX(-50%);
-          display:flex;flex-direction:column;align-items:stretch;justify-content:center;
-          background:#000000;width:clamp(150px,22vw,220px);border-left:2px solid #222b38;border-right:2px solid #222b38;z-index:5;box-shadow:0 0 30px rgba(0,0,0,0.8)}
+  /* KOTAK TENGAH: Lebar proporsional pas di tengah memisahkan biru dan merah */
+  .center{width:clamp(120px,18vw,180px);background:#000000;display:flex;flex-direction:column;align-items:stretch;justify-content:center;border-left:2px solid #1a212c;border-right:2px solid #1a212c;z-index:5;flex-shrink:0;box-shadow:0 0 25px rgba(0,0,0,0.8)}
   
-  .center .match-box{background:#000;padding:12px 6px;text-align:center;border-bottom:2px solid #222b38}
-  .center .match-title{font-size:clamp(16px,2.8vw,26px);font-weight:900;letter-spacing:.08em;color:#fff}
-  .center .match-label{font-size:clamp(10px,1.4vw,13px);font-weight:700;letter-spacing:.15em;color:var(--mut)}
+  .center .match-box{background:#000;padding:10px 4px;text-align:center;border-bottom:2px solid #1a212c}
+  .center .match-title{font-size:clamp(14px,2.2vw,22px);font-weight:900;letter-spacing:.08em;color:#fff}
+  .center .match-label{font-size:clamp(9px,1.2vw,11px);font-weight:700;letter-spacing:.15em;color:var(--mut)}
 
-  .center .clock-box{background:var(--gold);padding:14px 6px;text-align:center}
-  .center .clock{font-family:'Montserrat',sans-serif;font-size:clamp(32px,6.5vw,64px);font-weight:900;font-variant-numeric:tabular-nums;line-height:1;color:#1A1206}
+  .center .clock-box{background:var(--gold);padding:12px 4px;text-align:center}
+  .center .clock{font-family:'Montserrat',sans-serif;font-size:clamp(26px,5.2vw,52px);font-weight:900;font-variant-numeric:tabular-nums;line-height:1;color:#1A1206}
   .center .clock.brk{color:#D9261E}
 
-  .center .round-box{background:#000;padding:12px 6px;text-align:center;border-top:2px solid #222b38}
-  .center .rnd{font-size:clamp(11px,1.6vw,14px);font-weight:700;letter-spacing:.15em;color:var(--mut);text-transform:uppercase}
+  .center .round-box{background:#000;padding:10px 4px;text-align:center;border-top:2px solid #1a212c}
+  .center .rnd{font-size:clamp(10px,1.4vw,12px);font-weight:700;letter-spacing:.15em;color:var(--mut);text-transform:uppercase}
   .center .rnd span{color:#fff;font-weight:900}
 
   /* Footer Bawah */
-  .foot{display:flex;align-items:center;gap:8px;padding:6px 14px;font-size:11px;color:var(--mut);border-top:1px solid #1a212c;background:#05070a;flex-shrink:0}
+  .foot{display:flex;align-items:center;gap:8px;padding:5px 14px;font-size:11px;color:var(--mut);border-top:1px solid #1a212c;background:#05070a;flex-shrink:0}
   .foot .dot{width:8px;height:8px;border-radius:50%;background:var(--mut)}
   .foot .dot.on{background:var(--ok)}
   .foot .brand{margin-left:auto;letter-spacing:.1em}
@@ -159,7 +157,7 @@
         <div class="stats" id="statChung"></div>
       </div>
 
-      <!-- KOTAK TENGAH (MEMBELAH LAYAR) -->
+      <!-- KOTAK TENGAH (PEMISAH ANTARA BIRU & MERAH) -->
       <div class="center">
         <div class="match-box">
           <div class="match-title" id="matchCode">A1001</div>
