@@ -25,7 +25,7 @@
   .live{flex:1;display:none;flex-direction:column;min-height:0}
   .live.on{display:flex}
 
-  /* Header Paling Atas (Kategori / Nama Partai) */
+  /* Header Paling Atas */
   .head{display:flex;align-items:center;justify-content:center;gap:16px;padding:6px 12px;background:#000000;border-bottom:2px solid #1a212c;min-height:38px;flex-shrink:0}
   .head .cat{font-family:'Oswald',sans-serif;font-size:clamp(16px,2.5vw,26px);font-weight:700;letter-spacing:.08em;color:#fff}
   .head .no{font-size:clamp(12px,2vw,18px);color:var(--gold);font-weight:800;letter-spacing:.08em}
@@ -38,8 +38,9 @@
 
   /* Layout Utama */
   .grid{flex:1;display:flex;min-height:0;position:relative;background:#000}
+  .grid.swapped{flex-direction:row-reverse;}
   
-  /* Sisi Biru dan Merah dengan Warna Solid Cerah khas TV Taekwondo */
+  /* Sisi Tim */
   .team{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:12px;overflow:hidden}
   .team.chung{background:var(--chung)}
   .team.hong{background:var(--hong)}
@@ -61,12 +62,12 @@
   .team .nm{font-family:'Montserrat',sans-serif;font-size:clamp(20px,4.5vw,46px);font-weight:900;line-height:1.1;text-transform:uppercase;letter-spacing:.02em;color:#fff}
   .team .ctry{font-size:clamp(11px,1.8vw,16px);color:rgba(255,255,255,0.85);font-weight:700;letter-spacing:.05em;text-transform:uppercase}
 
-  /* Skor Utama (Angka Sangat Besar di Tengah Lapangan) */
+  /* Skor Utama */
   .team .sc{font-family:'Montserrat',sans-serif;font-size:clamp(100px,28vw,260px);font-weight:900;line-height:.9;font-variant-numeric:tabular-nums;margin-top:10px;text-shadow: 0 4px 20px rgba(0,0,0,0.3)}
   .team.bump .sc{animation:bump .4s}
   @keyframes bump{0%{transform:scale(1)}30%{transform:scale(1.16);color:var(--gold)}100%{transform:scale(1)}}
 
-  /* Statistik Bawah Sisi (Gam-jeom, Hits, #Won) - Dibuat Proporsional & Rapi */
+  /* Statistik Bawah Sisi */
   .stats{position:absolute;bottom:15px;display:flex;gap:clamp(16px,3vw,32px);z-index:2}
   .team.chung .stats{left:25px;}
   .team.hong .stats{right:25px;}
@@ -75,7 +76,7 @@
   .stat .v{font-family:'Montserrat',sans-serif;font-size:clamp(18px,3.2vw,30px);font-weight:900;font-variant-numeric:tabular-nums;color:#fff}
   .stat.won .v{color:var(--gold)}
 
-  /* KOTAK TENGAH: Presisi di tengah layar (Match, Timer, Round) tanpa memanjang penuh ke atas/bawah */
+  /* KOTAK TENGAH */
   .center{width:clamp(130px,20vw,190px);background:transparent;display:flex;flex-direction:column;align-items:stretch;justify-content:center;z-index:5;flex-shrink:0;gap:2px;}
   
   .center .match-box{background:#000;padding:12px 6px;text-align:center;border-bottom:2px solid #222}
@@ -99,6 +100,10 @@
   .sound{position:fixed;right:12px;bottom:34px;z-index:9;background:var(--gold);color:#1A1206;border:none;
          border-radius:22px;padding:10px 16px;font-size:13px;font-weight:800;box-shadow:0 4px 16px rgba(0,0,0,.4)}
   .sound.hide{display:none}
+
+  /* Tombol Toggle Posisi (Opsional di layar) */
+  .btn-switch{position:fixed;left:12px;bottom:34px;z-index:9;background:#222;color:#fff;border:1px solid #444;
+              border-radius:22px;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4)}
 </style>
 </head>
 <body>
@@ -141,7 +146,7 @@
     </div>
     <div class="banner" id="banner"></div>
     
-    <div class="grid">
+    <div class="grid" id="mainGrid">
       <!-- SISI KIRI (CHUNG / BLUE) -->
       <div class="team chung" id="teamChung">
         <div class="top">
@@ -158,7 +163,7 @@
         <div class="stats" id="statChung"></div>
       </div>
 
-      <!-- KOTAK TENGAH (MATCH, TIMER, ROUND) -->
+      <!-- KOTAK TENGAH -->
       <div class="center">
         <div class="match-box">
           <div class="match-title" id="matchCode">A1001</div>
@@ -196,6 +201,7 @@
   </div>
 
   <button class="sound hide" id="btnSound">🔊 Aktifkan suara</button>
+  <button class="btn-switch" id="btnSwitch">⇄ Tukar Posisi</button>
 
 <script type="module">
 import { db } from "./firebase-config.js";
@@ -217,20 +223,35 @@ function nada(f,d,t='sine',v=0.3){ if(!ac||!soundOn)return; const o=ac.createOsc
 function bunyiPoin(){ nada(880,0.12,'triangle',0.35); setTimeout(()=>nada(1175,0.14,'triangle',0.35),90); }
 function bunyiBel(){ nada(300,0.7,'sine',0.4); setTimeout(()=>nada(300,0.7,'sine',0.3),120); }
 
+/* ===== Pengaturan Switch Posisi (Biru/Merah) ===== */
+let isSwapped = false;
+$('btnSwitch').addEventListener('click', () => {
+  isSwapped = !isSwapped;
+  $('mainGrid').classList.toggle('swapped', isSwapped);
+});
+
 /* ===== Ambil Pertandingan Live ===== */
 let KODE=null;
 const hash=decodeURIComponent(location.hash.replace(/^#/,"")).toUpperCase();
 if (hash){ pasang(hash); }
 else onValue(ref(db,"live"), s=>{ const k=s.val(); if(k&&k!==KODE)pasang(k); else if(!k){KODE=null;$('live').classList.remove('on');$('wait').style.display='flex';} });
 
-let cfg={showNames:true,showImg:true,showCountry:true,showHeader:true,showGamjeom:true,showHits:true,showWon:true};
+let cfg={showNames:true,showImg:true,showCountry:true,showHeader:true,showGamjeom:true,showHits:true,showWon:true,sideSwap:false};
 let prev={chung:0,hong:0}, prevRem=null, sudahBel=false, pertama=true, cur=null;
 
 function pasang(kode){
   KODE=kode; $('wait').style.display='none'; $('live').classList.add('on');
   koneksi();
   onValue(ref(db,`matches/${kode}/meta`), s=> renderMeta(s.val()||{}));
-  onValue(ref(db,`matches/${kode}/config`), s=>{ cfg=Object.assign(cfg,s.val()||{}); applyConfig(); });
+  onValue(ref(db,`matches/${kode}/config`), s=>{ 
+    cfg=Object.assign(cfg,s.val()||{}); 
+    applyConfig(); 
+    // Sinkron otomatis jika diatur dari database Firebase
+    if(cfg.sideSwap !== undefined) {
+      isSwapped = cfg.sideSwap;
+      $('mainGrid').classList.toggle('swapped', isSwapped);
+    }
+  });
   onValue(ref(db,`matches/${kode}/state`), s=>{ const st=s.val(); if(st) renderState(st); });
 }
 
@@ -298,7 +319,7 @@ function renderStats(){
 }
 function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
 
-function fmt(sec){ const m=Math.floor(sec/60); return `${m}:${String(sec%60).padStart(2,'0')}`; }
+function fmt(sec){ const m=Math.floor(sec/60); return `${m}:${String(sec%60).padStart(2,'0')}`;}
 function renderClock(){
   const s=cur; if(!s)return;
   let sec = s.phase==="running" ? Math.max(0,Math.round((s.endAt-Date.now())/1000)) : (s.remaining??36);
