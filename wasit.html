@@ -2,7 +2,11 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0E1116">
 <title>Wasit — Skor Taekwondo</title>
 <style>
   :root{
@@ -99,6 +103,26 @@
   }
   @media (prefers-reduced-motion:reduce){
     .pbtn.plus.on{animation:none;box-shadow:0 6px 14px rgba(0,0,0,.6), 0 0 14px 4px rgba(245,179,37,.5)}
+  }
+
+  /* ===== LANDSCAPE: tombol lebih besar, tidak mepet bingkai ===== */
+  @media (orientation:landscape){
+    .pad{padding:12px calc(20px + env(safe-area-inset-right,0px)) 16px calc(20px + env(safe-area-inset-left,0px))}
+    .pad .lcd{top:40%}
+    .col{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr 1.25fr;
+         align-items:center;justify-items:center;gap:4px}
+    .col .head{grid-row:1;grid-column:1/3}
+    .pbtn.lg{width:min(clamp(110px,20vw,190px),33dvh)}
+    .pbtn.md{width:min(clamp(84px,14vw,140px),25dvh)}
+    .pbtn.sm{width:min(clamp(56px,9vw,92px),16dvh)}
+    .col.hong  .pos-a{grid-area:2/1;margin:0;align-self:center}
+    .col.hong  .pos-b{grid-area:2/2;margin:0;align-self:center}
+    .col.hong  .pos-c{grid-area:3/1;margin:0;align-self:center}
+    .col.hong  .pos-d{grid-area:3/2;margin:0;align-self:center}
+    .col.chung .pos-a{grid-area:2/2;margin:0;align-self:center}
+    .col.chung .pos-b{grid-area:2/1;margin:0;align-self:center}
+    .col.chung .pos-c{grid-area:3/2;margin:0;align-self:center}
+    .col.chung .pos-d{grid-area:3/1;margin:0;align-self:center}
   }
 
   /* tombol keluar + modal */
@@ -214,6 +238,7 @@ $('pick').addEventListener('click', e => {
 });
 
 $('btnEnter').addEventListener('click', async () => {
+  layarPenuh();   // masuk layar penuh selagi masih ada ketukan pengguna
   const kode = $('codeInput').value.trim().toUpperCase();
   $('gateErr').textContent = "";
   if (!kode){ $('gateErr').textContent = "Isi kode pertandingan."; return; }
@@ -372,6 +397,21 @@ function pantauKoneksi(){
     $('connText').textContent = on ? "tersambung" : "terputus";
   });
 }
+
+/* layar penuh: sembunyikan bilah alamat browser (perlu ketukan pengguna) */
+function layarPenuh(){
+  if (document.fullscreenElement) return;
+  const el = document.documentElement;
+  try{
+    const p = (el.requestFullscreen || el.webkitRequestFullscreen)?.call(el);
+    if (p && p.catch) p.catch(()=>{});
+  }catch(e){}
+}
+// jika layar penuh tak sengaja keluar (usap/back), ketukan berikutnya menyalakannya lagi
+document.addEventListener('pointerdown', () => {
+  const sc = $('screen');
+  if (sc && !sc.classList.contains('hidden')) layarPenuh();
+});
 
 /* jaga layar tetap menyala */
 async function wakeLock(){
