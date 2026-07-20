@@ -65,6 +65,9 @@
   .hd .flag{width:clamp(44px,9dvh,72px);background:#10141A;color:#fff;display:flex;flex-direction:column;
       align-items:center;justify-content:center;gap:2px;font-weight:800;font-size:clamp(10px,2.2dvh,14px)}
   .hd .flag span{font-size:clamp(14px,3.4dvh,24px);line-height:1}
+  .hd .flag img{width:100%;max-width:56px;height:auto;max-height:60%;object-fit:cover;border-radius:3px}
+  .hd .flag i{font-style:normal;font-size:clamp(8px,1.7dvh,11px);font-weight:700;max-width:100%;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px}
   .hd .nmband{flex:1;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;
       font-size:clamp(14px,3.6dvh,26px);letter-spacing:.02em;padding:.8dvh 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .hd.c .nmband{background:var(--chung)} .hd.h .nmband{background:var(--hong)}
@@ -459,6 +462,7 @@ function masukKonsol(){
   pantauKoneksi();
   dengarPencet();
   dengarWasit();
+  dengarMeta();
   pasangBack();
 }
 
@@ -804,6 +808,25 @@ function renderWasit(){
     const b = el.querySelector('b');
     if (b) b.textContent = hidup ? (d.b != null ? d.b + '%' : 'OK') : '\u2014';
   }
+}
+
+/* ====== nama, bendera/foto & kategori dari setup (matches/KODE/meta) ====== */
+const esc = t => String(t == null ? '' : t).replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+function dengarMeta(){
+  onValue(ref(db, `matches/${KODE}/meta`), snap => {
+    const m = snap.val() || {};
+    $('matchTitle').textContent =
+      [m.no, m.category].filter(Boolean).join(' \u00b7 ') || 'M12H \u00b7 WORLD TAEKWONDO';
+    isiSisi('C', m.chung); isiSisi('H', m.hong);
+  });
+}
+function isiSisi(sd, d){
+  d = d || {};
+  $('name' + sd).textContent = d.name || (sd === 'C' ? 'CHUNG' : 'HONG');
+  const neg = esc((d.country || '').slice(0, 14));
+  $('flag' + sd).innerHTML = d.img
+    ? `<img src="${esc(d.img)}" alt=""><i>${neg || '&nbsp;'}</i>`
+    : `<span>&#127937;</span><i>${neg || '\u2014'}</i>`;
 }
 
 /* ====== keluar / tombol back ====== */
