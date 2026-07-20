@@ -37,15 +37,69 @@
   .status.reg{color:#0E1116;background:var(--gold)}
   .status.valid{color:#08130C;background:var(--ok)}
 
-  .pad{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px;min-height:0}
-  .col{display:flex;flex-direction:column;gap:8px}
-  .col .head{text-align:center;font-size:12px;letter-spacing:.15em;color:var(--mut);text-transform:uppercase;padding:2px 0}
-  .btn{flex:1;border:none;border-radius:12px;color:#fff;font-size:17px;font-weight:800;line-height:1.15;
-       display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px;min-height:52px}
-  .btn small{font-size:12px;font-weight:500;opacity:.85}
-  .col.chung .btn{background:var(--chung)}
-  .col.hong  .btn{background:var(--hong)}
-  .btn:active{filter:brightness(1.45)}
+  /* ===== BODI STIK ===== */
+  .pad{flex:1;position:relative;margin:10px;min-height:0;overflow:hidden;
+       border-radius:22px;border:7px solid #07090C;
+       display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:10px 8px 14px;
+       background:
+         radial-gradient(rgba(255,255,255,.055) 1px, transparent 1.5px) 0 0/7px 7px,
+         radial-gradient(ellipse 300px 130px at 15% 18%, #262B33 0%, transparent 60%),
+         radial-gradient(ellipse 340px 150px at 82% 34%, #14171D 0%, transparent 60%),
+         radial-gradient(ellipse 380px 160px at 38% 72%, #272C35 0%, transparent 60%),
+         radial-gradient(ellipse 300px 140px at 86% 86%, #171A20 0%, transparent 60%),
+         #1C2027;
+       box-shadow:inset 0 0 34px rgba(0,0,0,.75), 0 6px 18px rgba(0,0,0,.5)}
+  .pad .lcd{position:absolute;left:50%;top:37%;transform:translate(-50%,-50%);
+       font:700 10px "Courier New",monospace;letter-spacing:.28em;color:#E8EDF5;
+       text-shadow:0 0 6px rgba(255,255,255,.35);opacity:.75;pointer-events:none;white-space:nowrap;z-index:0}
+  .col{display:flex;flex-direction:column;justify-content:space-between;gap:6px;min-height:0;position:relative;z-index:1}
+  .col .head{text-align:center;font-size:9px;letter-spacing:.3em;color:#6D7686;text-transform:uppercase}
+
+  /* tombol bundar: cincin krom + muka mengilap */
+  .pbtn{border:none;border-radius:50%;padding:5px;display:block;aspect-ratio:1;touch-action:manipulation;
+        background:conic-gradient(from 210deg,#FDFDFD,#98A0AA 25%,#E9EDF2 50%,#8B929C 72%,#FDFDFD);
+        box-shadow:0 6px 14px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.3)}
+  .pbtn .face{width:100%;height:100%;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+        color:#fff;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-weight:800;line-height:1;
+        text-shadow:0 2px 3px rgba(0,0,0,.45);
+        box-shadow:inset 0 -12px 18px rgba(0,0,0,.42), inset 0 3px 6px rgba(255,255,255,.35)}
+  .col.hong  .face{background:radial-gradient(circle at 32% 26%, rgba(255,255,255,.95) 0%, rgba(255,255,255,.12) 30%, rgba(255,255,255,0) 42%),
+                              radial-gradient(circle at 50% 62%, #EF4136 0%, #C3170D 55%, #7C0B05 100%)}
+  .col.chung .face{background:radial-gradient(circle at 32% 26%, rgba(255,255,255,.95) 0%, rgba(255,255,255,.12) 30%, rgba(255,255,255,0) 42%),
+                              radial-gradient(circle at 50% 62%, #3B8BF2 0%, #1660C9 55%, #0A3A85 100%)}
+
+  .pbtn.lg{width:min(clamp(120px,40vw,175px),24dvh)}
+  .pbtn.md{width:min(clamp(88px,30vw,132px),18dvh)}
+  .pbtn.sm{width:min(clamp(62px,20vw,88px),11dvh)}
+  .pbtn.lg .face{font-size:clamp(54px,16vw,82px)}
+  .pbtn.md .face{font-size:clamp(38px,11vw,56px)}
+  .pbtn.sm .face{font-style:normal;font-family:system-ui,-apple-system,sans-serif;font-weight:900;font-size:clamp(26px,9vw,40px)}
+  .pv{font:700 10px system-ui,-apple-system,sans-serif;font-style:normal;letter-spacing:.05em;min-height:11px;margin-top:1px}
+
+  /* posisi mengikuti gambar: 3 luar, + dalam, 2 luar, 1 dalam */
+  .col.hong  .pos-a{align-self:flex-start;margin-left:2%}
+  .col.hong  .pos-b{align-self:flex-end;margin-right:16%}
+  .col.hong  .pos-c{align-self:flex-start}
+  .col.hong  .pos-d{align-self:flex-end;margin-right:4%}
+  .col.chung .pos-a{align-self:flex-end;margin-right:2%}
+  .col.chung .pos-b{align-self:flex-start;margin-left:16%}
+  .col.chung .pos-c{align-self:flex-end}
+  .col.chung .pos-d{align-self:flex-start;margin-left:4%}
+
+  .pbtn:not(.off):active{transform:translateY(2px)}
+  .pbtn:not(.off):active .face{filter:brightness(1.3)}
+
+  /* tombol +: mati sampai 2/3 ditekan */
+  .pbtn.plus{transition:filter .15s}
+  .pbtn.plus.off{filter:grayscale(1) brightness(.5)}
+  .pbtn.plus.on{animation:armPulse .9s ease-in-out infinite}
+  @keyframes armPulse{
+    0%,100%{box-shadow:0 6px 14px rgba(0,0,0,.6), 0 0 0 0 rgba(245,179,37,0)}
+    50%{box-shadow:0 6px 14px rgba(0,0,0,.6), 0 0 18px 6px rgba(245,179,37,.55)}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .pbtn.plus.on{animation:none;box-shadow:0 6px 14px rgba(0,0,0,.6), 0 0 14px 4px rgba(245,179,37,.5)}
+  }
 
   /* tombol keluar + modal */
   .exit{margin-left:8px;background:none;border:1px solid var(--line);color:var(--mut);
@@ -117,8 +171,9 @@
     </div>
     <div class="status" id="status">Tekan saat serangan sah</div>
     <div class="pad">
-      <div class="col chung" id="colChung"><div class="head">Chung</div></div>
+      <div class="lcd">WORLD&nbsp;TAEKWONDO</div>
       <div class="col hong"  id="colHong"><div class="head">Hong</div></div>
+      <div class="col chung" id="colChung"><div class="head">Chung</div></div>
     </div>
   </div>
 
@@ -135,13 +190,18 @@ import { db } from "./firebase-config.js";
 import { ref, push, onValue, get, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/12.16.0/firebase-database.js";
 
-const TEKNIK = [
-  { id:'pukulan',      nama:'Pukulan',      pts:1 },
-  { id:'badan',        nama:'Badan',        pts:2 },
-  { id:'kepala',       nama:'Kepala',       pts:3 },
-  { id:'putar_badan',  nama:'Putar Badan',  pts:4 },
-  { id:'putar_kepala', nama:'Putar Kepala', pts:5 },
+/* ===== PENGATURAN TOMBOL (+) — mudah diubah ===== */
+const PLUS_AKTIF_MS = 3000;                 // lama tombol + menyala setelah tekan 2/3 (ms)
+const PLUS_BONUS = { badan:2, kepala:2 };   // peraturan terbaru? ubah kepala jadi 3 → putar ke kepala +3
+
+/* susunan tombol mengikuti gambar stik: 3 (atas), +, 2, 1 (bawah, terbesar) */
+const LAYOUT = [
+  { key:'kepala',  label:'3', size:'md', pos:'a' },
+  { key:'plus',    label:'+', size:'sm', pos:'b' },
+  { key:'badan',   label:'2', size:'md', pos:'c' },
+  { key:'pukulan', label:'1', size:'lg', pos:'d' },
 ];
+
 const $ = id => document.getElementById(id);
 let KODE = "", JUDGE = 0;
 
@@ -198,13 +258,18 @@ async function autoMasuk(){
 
 /* tombol */
 function buatTombol(){
-  [['chung','colChung'],['hong','colHong']].forEach(([side,colId]) => {
+  [['hong','colHong'],['chung','colChung']].forEach(([side,colId]) => {
     const col = $(colId);
-    TEKNIK.forEach(t => {
+    LAYOUT.forEach(t => {
       const b = document.createElement('button');
-      b.className = 'btn';
-      b.innerHTML = `${t.nama}<small>+${t.pts}</small>`;
-      b.addEventListener('click', () => tekan(side, t.id));
+      b.className = `pbtn ${t.size} pos-${t.pos}` + (t.key==='plus' ? ' plus off' : '');
+      b.innerHTML = `<span class="face">${t.label}${t.key==='plus' ? '<small class="pv"></small>' : ''}</span>`;
+      if (t.key === 'plus'){
+        b.id = `plus-${side}`;
+        b.addEventListener('click', () => tekanPlus(side));
+      } else {
+        b.addEventListener('click', () => tekan(side, t.key));
+      }
       col.appendChild(b);
     });
   });
@@ -218,6 +283,43 @@ function tekan(side, techId){
   push(ref(db, `matches/${KODE}/presses`), {
     judge: JUDGE, side, tech: techId, t: serverTimestamp()
   });
+  // logika (+): 2/3 mengaktifkan tombol +, 1 mematikannya
+  if (techId === 'badan' || techId === 'kepala') aktifkanPlus(side, techId);
+  else matikanPlus(side);
+}
+
+/* ===== logika tombol (+) ===== */
+const plusState = { hong:{dasar:null,timer:null}, chung:{dasar:null,timer:null} };
+
+function aktifkanPlus(side, dasar){
+  const s = plusState[side];
+  clearTimeout(s.timer);
+  s.dasar = dasar;
+  const el = $(`plus-${side}`);
+  el.classList.remove('off'); el.classList.add('on');
+  el.querySelector('.pv').textContent = `+${PLUS_BONUS[dasar]}`;
+  s.timer = setTimeout(() => matikanPlus(side), PLUS_AKTIF_MS);
+}
+
+function matikanPlus(side){
+  const s = plusState[side];
+  clearTimeout(s.timer);
+  s.dasar = null; s.timer = null;
+  const el = $(`plus-${side}`); if (!el) return;
+  el.classList.add('off'); el.classList.remove('on');
+  el.querySelector('.pv').textContent = '';
+}
+
+function tekanPlus(side){
+  const s = plusState[side];
+  if (!s.dasar) return;             // belum aktif: abaikan
+  const dasar = s.dasar, pts = PLUS_BONUS[dasar];
+  getar(30);
+  statusFlash(`Putar +${pts} terdaftar`, 'reg');
+  push(ref(db, `matches/${KODE}/presses`), {
+    judge: JUDGE, side, tech: `plus_${dasar}`, pts, t: serverTimestamp()
+  });
+  matikanPlus(side);                // satu konfirmasi per teknik
 }
 
 let stTimer = null;
