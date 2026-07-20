@@ -211,7 +211,7 @@
 
 <script type="module">
 import { db } from "./firebase-config.js";
-import { ref, push, onValue, get, serverTimestamp }
+import { ref, push, set, onDisconnect, onValue, get, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/12.16.0/firebase-database.js";
 
 /* ===== PENGATURAN TOMBOL (+) — mudah diubah ===== */
@@ -270,6 +270,7 @@ function masuk(){
   dengarValid();
   dengarWaktu();
   wakeLock();
+  kirimHadir();
   pasangBack();
 }
 
@@ -412,6 +413,22 @@ document.addEventListener('pointerdown', () => {
   const sc = $('screen');
   if (sc && !sc.classList.contains('hidden')) layarPenuh();
 });
+
+/* hadir: kabari operator bahwa wasit ini tersambung (perlu izin node judges di Rules) */
+let LEVEL_BATERAI = null;
+if (navigator.getBattery){
+  navigator.getBattery().then(b => {
+    const upd = () => { LEVEL_BATERAI = Math.round(b.level * 100); };
+    upd(); b.addEventListener('levelchange', upd);
+  }).catch(()=>{});
+}
+function kirimHadir(){
+  const r = ref(db, `matches/${KODE}/judges/${JUDGE}`);
+  const tulis = () => set(r, { t: Date.now(), b: LEVEL_BATERAI }).catch(()=>{});
+  tulis();
+  try{ onDisconnect(r).remove(); }catch(e){}
+  setInterval(tulis, 10000);
+}
 
 /* jaga layar tetap menyala */
 async function wakeLock(){
