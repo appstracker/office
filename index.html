@@ -36,6 +36,12 @@
   .banner.on{display:block}
   .banner.win{background:var(--ok);color:#08130C}
 
+  /* Container Tombol Switch (Center Atas di bawah Banner) */
+  .switch-container{background:#000;display:flex;justify-content:center;padding:4px 0;flex-shrink:0;border-bottom:1px solid #1a212c}
+  .btn-switch{background:rgba(255, 255, 255, 0.12);color:rgba(255, 255, 255, 0.85);border:1px solid rgba(255, 255, 255, 0.2);
+              border-radius:16px;padding:4px 14px;font-size:11px;font-weight:700;cursor:pointer;backdrop-filter:blur(4px);transition:all .2s}
+  .btn-switch:hover{background:rgba(255, 255, 255, 0.25);color:#fff}
+
   /* Layout Utama */
   .grid{flex:1;display:flex;min-height:0;position:relative;background:#000}
   .grid.swapped{flex-direction:row-reverse;}
@@ -100,10 +106,6 @@
   .sound{position:fixed;right:12px;bottom:34px;z-index:9;background:var(--gold);color:#1A1206;border:none;
          border-radius:22px;padding:10px 16px;font-size:13px;font-weight:800;box-shadow:0 4px 16px rgba(0,0,0,.4)}
   .sound.hide{display:none}
-
-  /* Tombol Toggle Posisi (Opsional di layar) */
-  .btn-switch{position:fixed;left:12px;bottom:34px;z-index:9;background:#222;color:#fff;border:1px solid #444;
-              border-radius:22px;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4)}
 </style>
 </head>
 <body>
@@ -146,6 +148,11 @@
     </div>
     <div class="banner" id="banner"></div>
     
+    <!-- Tombol Switch di Center Atas (Di bawah Banner) -->
+    <div class="switch-container">
+      <button class="btn-switch" id="btnSwitch">⇄ Tukar Posisi</button>
+    </div>
+
     <div class="grid" id="mainGrid">
       <!-- SISI KIRI (CHUNG / BLUE) -->
       <div class="team chung" id="teamChung">
@@ -201,7 +208,6 @@
   </div>
 
   <button class="sound hide" id="btnSound">🔊 Aktifkan suara</button>
-  <button class="btn-switch" id="btnSwitch">⇄ Tukar Posisi</button>
 
 <script type="module">
 import { db } from "./firebase-config.js";
@@ -246,7 +252,6 @@ function pasang(kode){
   onValue(ref(db,`matches/${kode}/config`), s=>{ 
     cfg=Object.assign(cfg,s.val()||{}); 
     applyConfig(); 
-    // Sinkron otomatis jika diatur dari database Firebase
     if(cfg.sideSwap !== undefined) {
       isSwapped = cfg.sideSwap;
       $('mainGrid').classList.toggle('swapped', isSwapped);
@@ -319,7 +324,7 @@ function renderStats(){
 }
 function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
 
-function fmt(sec){ const m=Math.floor(sec/60); return `${m}:${String(sec%60).padStart(2,'0')}`;}
+function fmt(sec){ const m=Math.floor(sec/60); return `${m}:${String(sec%60).padStart(2,'0')}`; }
 function renderClock(){
   const s=cur; if(!s)return;
   let sec = s.phase==="running" ? Math.max(0,Math.round((s.endAt-Date.now())/1000)) : (s.remaining??36);
