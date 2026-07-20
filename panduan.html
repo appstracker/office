@@ -67,25 +67,35 @@
   <p class="lead">Papan skor pertandingan taekwondo real-time standar WT · idwt.web.id</p>
 
   <div class="box">
-    <b>Empat peran, empat halaman:</b>
+    <b>Lima peran, lima halaman:</b>
     <ul>
       <li><b>Penyelenggara</b> → <code>idwt.web.id/setup.html</code> — membuat partai</li>
-      <li><b>Operator</b> → <code>idwt.web.id/operator.html</code> — kendali skor & waktu</li>
-      <li><b>Wasit</b> (×3) → <code>idwt.web.id/wasit.html</code> — menekan poin</li>
-      <li><b>Tamu / Penonton</b> → <code>idwt.web.id</code> — papan skor (otomatis)</li>
+      <li><b>Operator</b> → <code>idwt.web.id/operator.html</code> — konsol pertandingan (skor, waktu, statistik)</li>
+      <li><b>Wasit</b> (×3) → <code>idwt.web.id/wasit.html</code> — stik penilaian</li>
+      <li><b>Tamu / Penonton</b> → <code>idwt.web.id</code> (saluran utama) atau <code>idwt.web.id/#KODE</code> (partai tertentu)</li>
+      <li><b>Hasil / Arsip</b> → <code>idwt.web.id/hasil.html</code> — rekor partai &amp; unduh PDF</li>
+    </ul>
+  </div>
+
+  <div class="box warn">
+    <b>⚠️ Peringatan terpenting: kode pertandingan = KUNCI.</b>
+    <ul>
+      <li>Kode (mis. <code>TKD-1234</code>) adalah kunci login wasit — <b>jangan pernah disebar ke publik</b>. Cukup operator &amp; 3 wasit yang tahu.</li>
+      <li>Link papan <code>idwt.web.id/#KODE</code> memuat kode itu, jadi sementara ini <b>hanya untuk internal</b> (TV venue, panitia) — bukan untuk grup WA penonton.</li>
+      <li><b>Partai baru = kode baru.</b> Jangan memakai ulang kode lama, dan jangan kode gampang ditebak seperti <code>0000</code> — selalu pakai tombol <b>Acak</b>.</li>
     </ul>
   </div>
 
   <h2>Cara Kerja Singkat</h2>
-  <p>Setiap pertandingan punya satu <b>kode</b> (misal <code>TKD-1234</code>). Semua perangkat yang memakai kode sama akan tersambung ke pertandingan yang sama secara real-time. Wasit hanya mengirim tekanan; <b>operator</b> yang menghitung apakah poin sah dan menampilkan skor; <b>tamu</b> hanya melihat.</p>
+  <p>Setiap partai punya satu <b>kode</b>. Semua perangkat berkode sama tersambung real-time. Wasit hanya mengirim tekanan; <b>operator</b> menghitung poin sah (minimal 2 dari 3 wasit) dan mengendalikan waktu; <b>tamu</b> hanya melihat.</p>
 
   <h2>Urutan Memulai Pertandingan</h2>
   <ol>
     <li><b>Penyelenggara</b> buka <code>setup.html</code>, buat partai, catat kodenya.</li>
-    <li><b>Operator</b> masuk dengan kode itu — pertandingan otomatis tayang di papan tamu.</li>
-    <li><b>3 wasit</b> masuk dengan kode yang sama, pilih nomor kursi masing-masing.</li>
-    <li><b>Penonton</b> cukup buka <code>idwt.web.id</code>.</li>
-    <li>Operator menekan <b>Mulai</b> — pertandingan berjalan.</li>
+    <li><b>Operator</b> login (password hanya diminta di perangkat baru), masukkan kode, pegang perangkat <b>landscape</b>.</li>
+    <li><b>3 wasit</b> masuk dengan kode yang sama, pilih nomor 1/2/3 — indikator wasit di bar atas operator menyala hijau.</li>
+    <li><b>Layar penonton</b> (TV/proyektor) dibuka dengan <code>idwt.web.id/#KODE</code>.</li>
+    <li>Operator menekan <b>▶</b> — pertandingan berjalan. Tombol <b>Test</b> menggetarkan semua wasit untuk cek koneksi.</li>
   </ol>
 
   <h2>Panduan per Peran</h2>
@@ -93,88 +103,104 @@
   <div class="role admin">
     <h3>1. Penyelenggara — Setup Partai</h3>
     <ol>
-      <li>Buka <code>setup.html</code>, masukkan <b>PIN</b>.</li>
-      <li>Isi <b>Kode Pertandingan</b> (atau tekan Acak), <b>Nomor Partai</b>, dan <b>Kategori</b>.</li>
-      <li>Isi <b>nama</b> dan <b>negara</b> tiap atlet (Chung = biru, Hong = merah).</li>
-      <li>Pilih <b>Bendera</b> (ketik kode negara 2 huruf: <code>ID</code>, <code>KR</code>, <code>US</code>…) atau <b>Foto</b> (tempel URL gambar). Pratinjau muncul otomatis.</li>
-      <li>Centang elemen yang ingin <b>tampil di papan</b>: nama, bendera/foto, negara, nomor & kategori, gam-jeom, hits, #WON.</li>
-      <li>Tekan <b>Simpan &amp; Buat Partai</b>, lalu bagikan kodenya ke operator &amp; wasit.</li>
+      <li>Buka <code>setup.html</code>, masuk dengan <b>password penyelenggara</b>.</li>
+      <li>Isi <b>Kode</b> (pakai Acak), <b>Nomor Partai</b>, dan <b>Kategori</b> — perhatikan peringatan di samping label kode.</li>
+      <li>Isi nama &amp; negara tiap atlet; pilih <b>Bendera</b> (kode 2 huruf: <code>ID</code>, <code>KR</code>) atau <b>Foto</b> (URL gambar). Pratinjau muncul otomatis.</li>
+      <li>Centang elemen yang ingin tampil di papan tamu.</li>
+      <li>Tekan <b>Simpan &amp; Buat Partai</b>, lalu bagikan kode <b>hanya</b> ke operator &amp; wasit.</li>
     </ol>
   </div>
 
   <div class="role op">
-    <h3>2. Operator — Kendali Pertandingan</h3>
+    <h3>2. Operator — Konsol Pertandingan</h3>
     <ol>
-      <li>Buka <code>operator.html</code>, masukkan <b>PIN</b>, ketik <b>kode</b> yang sama dari penyelenggara.</li>
-      <li>Pastikan titik koneksi <b>hijau</b> (tersambung).</li>
-      <li><b>Waktu:</b> tombol <b>Mulai / Jeda</b> menjalankan timer; <b>Ronde ›</b> untuk pindah ke istirahat lalu ronde berikutnya.</li>
-      <li><b>Gam-jeom:</b> tekan <b>GJ Chung</b> bila Chung melanggar (Hong otomatis +1), begitu sebaliknya.</li>
-      <li><b>Koreksi:</b> <b>Batalkan poin terakhir</b> untuk membatalkan skor yang keliru; <b>Reset</b> untuk mengosongkan seluruh skor & waktu.</li>
-      <li>Skor naik <b>otomatis</b> saat minimal 2 dari 3 wasit setuju — operator tidak menekan skor sendiri.</li>
+      <li>Buka <code>operator.html</code> (password hanya di perangkat baru), masukkan kode. Konsol <b>wajib landscape</b>; layar penuh menyala otomatis.</li>
+      <li>Bar atas: indikator <b>wasit 1-2-3</b> (hijau + % baterai bila tersambung), judul partai dari setup, titik koneksi.</li>
+      <li>Nama, bendera/foto, statistik <b>Attack/Gam-Jeom per ronde (R1-R3)</b>, dan <b>log kejadian</b> terisi otomatis.</li>
+      <li><b>Waktu:</b> ▶ mulai, ⏸ jeda, <b>T.Out</b> = time out, <b>Injury</b> = kye-shi (kotak waktu berubah kuning). <b>Akhiri Ronde</b> &amp; <b>Batal Poin</b> ada di kolom tengah.</li>
+      <li><b>Gam-jeom:</b> tombol kartu di deretan sisi masing-masing — lawan otomatis +1.</li>
+      <li><b>Poin manual (koreksi):</b> deretan +1/+2/+3/Putar/−1 per sisi; sakelar <b>+/−</b> mengubahnya jadi mode pengurangan. Gunakan hanya untuk koreksi — penilaian tetap milik wasit.</li>
+      <li><b>C WIN / H WIN:</b> menyatakan pemenang partai (cedera/diskualifikasi), selalu dengan konfirmasi.</li>
+      <li>Panel <b>Rule</b> ⚙: durasi ronde, time out/kye-shi, selisih, <b>wasit minimal</b> (set 1 untuk latihan sendirian), dan <b>Reset partai</b>.</li>
+      <li>Toolbar lain: <b>Result</b> buka arsip hasil, <b>Score</b> buka papan tamu, <b>Reverse</b> tukar posisi, <b>Reg.</b> buka setup, <b>Off</b> keluar.</li>
     </ol>
   </div>
 
   <div class="role wasit">
-    <h3>3. Wasit — Menekan Poin</h3>
+    <h3>3. Wasit — Stik Penilaian</h3>
     <ol>
-      <li>Buka <code>wasit.html</code>, masukkan <b>kode</b> pertandingan, pilih <b>nomor wasit</b> (1/2/3).</li>
-      <li>Bila kode salah, muncul "Kode tidak ditemukan" — minta kode yang benar ke operator.</li>
-      <li>Di bar atas terlihat <b>ronde &amp; waktu</b>. Jika ikut berjalan saat operator menekan Mulai, berarti kamu tersambung ke pertandingan yang benar.</li>
-      <li>Tekan tombol sesuai serangan sah. HP <b>bergetar pendek</b> tiap tekan (tanda terdaftar), dan <b>getar dobel</b> saat poin disepakati 2 dari 3 wasit.</li>
-      <li>Layar wasit sengaja <b>tidak menampilkan skor</b> agar fokus menilai.</li>
-      <li>Saat pertandingan <b>berjalan</b>, tombol keluar terkunci agar tidak keluar tak sengaja. Keluar hanya bisa saat waktu dijeda.</li>
+      <li>Buka <code>wasit.html</code>, masukkan kode, pilih nomor wasit — layar penuh menyala otomatis.</li>
+      <li>Stik: merah (Hong) di kiri, biru (Chung) di kanan; tombol <b>3, 2, 1</b> dan <b>(+)</b> per warna.</li>
+      <li><b>Tombol (+):</b> abu-abu (mati) sampai kamu menekan 2 atau 3, lalu menyala 3 detik. Tekan saat menyala untuk konfirmasi <b>teknik berputar (+2)</b>; menekan 1 mematikannya lagi.</li>
+      <li>Getar pendek tiap tekan (terdaftar); <b>getar dobel</b> saat poin disepakati 2 dari 3 wasit.</li>
+      <li>Layar wasit tidak menampilkan skor, dan tombol keluar terkunci selama waktu berjalan.</li>
     </ol>
   </div>
 
   <div class="role tamu">
     <h3>4. Tamu / Penonton — Papan Skor</h3>
     <ol>
-      <li>Cukup buka <code>idwt.web.id</code> — papan menampilkan pertandingan yang sedang tayang.</li>
-      <li>Tekan tombol <b>🔊 Aktifkan suara</b> satu kali agar ada bunyi poin &amp; bel waktu habis (aturan browser HP mewajibkan sentuhan dulu).</li>
-      <li>Cocok ditampilkan di TV atau proyektor.</li>
+      <li>Menonton partai tertentu: buka <code>idwt.web.id/#KODE</code> — ingat, sementara hanya untuk internal (lihat peringatan kode di atas).</li>
+      <li><code>idwt.web.id</code> polos adalah saluran utama; untuk saat ini menampilkan “Menunggu pertandingan…” sampai fitur <b>Tayangkan LIVE</b> terpasang.</li>
+      <li>Tekan tombol suara 🔊 sekali untuk bunyi poin &amp; bel; ketuk layar sekali untuk layar penuh. Cocok untuk TV/proyektor.</li>
+    </ol>
+  </div>
+
+  <div class="role admin">
+    <h3>5. Hasil / Arsip — hasil.html</h3>
+    <ol>
+      <li>Masuk dengan password <b>penyelenggara</b>.</li>
+      <li>Berisi daftar partai yang selesai: nomor, kategori, nama atlet, skor ronde, pemenang, dan waktu selesai.</li>
+      <li>Tombol <b>PDF</b> membuat dokumen hasil per partai (lengkap tabel ronde); <b>Rekap PDF</b> membuat rekap seluruh turnamen — semuanya dibuat di browser, tanpa server.</li>
     </ol>
   </div>
 
   <h2>Aturan Penilaian (Standar WT)</h2>
   <table>
-    <tr><th>Teknik</th><th>Nilai</th></tr>
-    <tr><td>Pukulan ke badan</td><td>1</td></tr>
-    <tr><td>Tendangan ke badan</td><td>2</td></tr>
-    <tr><td>Tendangan ke kepala</td><td>3</td></tr>
-    <tr><td>Tendangan berputar ke badan</td><td>4</td></tr>
-    <tr><td>Tendangan berputar ke kepala</td><td>5</td></tr>
+    <tr><th>Teknik</th><th>Tombol wasit</th><th>Nilai</th></tr>
+    <tr><td>Pukulan</td><td>1</td><td>1</td></tr>
+    <tr><td>Tendangan ke badan</td><td>2</td><td>2</td></tr>
+    <tr><td>Tendangan ke kepala</td><td>3</td><td>3</td></tr>
+    <tr><td>Tendangan berputar ke badan</td><td>2 lalu (+)</td><td>2 + 2 = 4</td></tr>
+    <tr><td>Tendangan berputar ke kepala</td><td>3 lalu (+)</td><td>3 + 2 = 5</td></tr>
   </table>
   <ul>
-    <li><b>Poin sah:</b> minimal <b>2 dari 3 wasit</b> menekan tombol yang sama dalam <b>1 detik</b>.</li>
-    <li><b>Gam-jeom:</b> pelanggaran → lawan mendapat <b>+1</b>.</li>
-    <li><b>Selisih 12:</b> pertandingan dihentikan otomatis.</li>
-    <li><b>Waktu:</b> 3 ronde × 2 menit, istirahat 1 menit (dikendalikan operator).</li>
+    <li><b>Poin sah:</b> minimal <b>2 dari 3 wasit</b> menekan tombol sama dalam <b>1 detik</b> (khusus konfirmasi (+): 2 detik).</li>
+    <li>Konfirmasi (+) dihitung terpisah: tendangan dasarnya tetap sah walau (+) tidak mencapai mayoritas.</li>
+    <li><b>Gam-jeom:</b> pelanggaran → lawan mendapat +1.</li>
+    <li><b>Best-of-3:</b> skor direset tiap ronde; menang 2 ronde = menang partai. Selisih 12 mengakhiri ronde.</li>
+    <li><b>Waktu:</b> bawaan 3 ronde × 2 menit — durasi &amp; aturan lain bisa diubah operator lewat panel <b>Rule</b>.</li>
+    <li>Bila peraturan terbaru berlaku (berputar ke kepala jadi +3), nilai (+) tinggal disesuaikan di pengaturan aplikasi.</li>
   </ul>
 
   <h2>Tips Penting</h2>
   <ul>
-    <li><b>Kode harus sama persis</b> di semua perangkat (huruf besar). Ini penyebab tersering skor tidak muncul.</li>
-    <li><b>Getar</b> hanya berfungsi di HP <b>Android</b>. iPhone/Safari tidak mendukung getar.</li>
-    <li>Refresh halaman <b>tidak mereset</b> — perangkat akan tersambung kembali otomatis.</li>
-    <li>Layar wasit dijaga tetap menyala selama bertugas.</li>
+    <li><b>Kode harus sama persis</b> di semua perangkat — penyebab tersering skor tidak muncul.</li>
+    <li><b>Getar</b> hanya berfungsi di HP <b>Android</b>; iPhone tidak mendukung. Layar penuh otomatis juga khusus Android — di iPhone gunakan “Tambahkan ke Layar Utama”.</li>
+    <li>Refresh halaman <b>tidak mereset</b> — perangkat tersambung kembali otomatis. Layar wasit dijaga tetap menyala.</li>
+    <li>Mau mencoba sendirian? Panel <b>Rule</b> → wasit minimal = 1 (kembalikan ke 2 sebelum pertandingan resmi).</li>
   </ul>
 
   <div class="box warn">
-    <b>Keamanan &amp; status</b>
+    <b>Keamanan &amp; status aplikasi</b>
     <ul>
-      <li><b>Login akun.</b> Operator &amp; penyelenggara masuk dengan <b>email + password</b> (akun dibuat di Firebase Console → Authentication). PIN lama sudah tidak dipakai. <span class="pill">aktif</span></li>
-      <li><b>Firebase Rules terkunci.</b> Hanya yang login bisa mengubah skor; tamu baca-saja; wasit hanya bisa mengirim tekanan. <span class="pill">aktif</span></li>
-      <li><b>Best-of-3 (#WON)</b> belum aktif; penghitung ronde masih 0. <span class="pill">menyusul</span></li>
-      <li><b>Celah tekanan wasit.</b> Wasit tanpa login, jadi orang yang tahu kode secara teori bisa kirim tekanan palsu. Bisa ditutup dengan PIN wasit per pertandingan. <span class="pill">opsional</span></li>
+      <li><b>Login akun.</b> Operator dan penyelenggara memakai dua akun terpisah (cukup password di halamannya masing-masing). <span class="pill">aktif</span></li>
+      <li><b>Firebase Rules.</b> Tamu baca-saja; hanya yang login bisa mengubah skor; wasit hanya mengirim tekanan. <b>Wajib menambah izin tulis</b> untuk node <code>results</code>, <code>matches/$code/rounds</code>, dan <code>matches/$code/judges</code> — tanpa ini hasil tidak tersimpan dan indikator wasit tetap abu-abu. <span class="pill">wajib</span></li>
+      <li><b>Best-of-3 (#WON)</b> aktif penuh. <span class="pill">aktif</span></li>
+      <li><b>Kode tidak kedaluwarsa.</b> Partai yang selesai masih bisa dimasuki lewat halaman wasit oleh siapa pun yang tahu kodenya. Penutupnya sedang disiapkan: wasit menolak partai selesai, tombol Tutup Partai, kode tonton publik, dan tombol Tayangkan LIVE. <span class="pill">menyusul</span></li>
+      <li><b>Penulisan hasil otomatis</b> dari operator ke arsip saat partai selesai. <span class="pill">menyusul</span></li>
+      <li><b>Celah tekanan wasit.</b> Wasit tanpa login, jadi siapa pun yang tahu kode bisa mengirim tekanan. Sementara: jaga kerahasiaan kode. <span class="pill">opsional</span></li>
     </ul>
   </div>
 
   <h2>Bila Ada Masalah</h2>
   <ul>
-    <li><b>Skor tidak naik:</b> pastikan kode sama di operator &amp; wasit, dan Firebase Rules sudah di-set.</li>
-    <li><b>Titik koneksi merah/terputus:</b> cek internet perangkat.</li>
-    <li><b>Papan tamu kosong:</b> pastikan operator sudah masuk (operator menentukan pertandingan yang tayang).</li>
-    <li><b>Wasit "Kode tidak ditemukan":</b> operator/penyelenggara harus membuat pertandingan itu dulu.</li>
+    <li><b>Skor tidak naik:</b> pastikan kode sama persis di operator &amp; semua wasit, dan Firebase Rules sudah benar.</li>
+    <li><b>Indikator wasit abu-abu terus:</b> izin node <code>judges</code> belum ditambahkan di Rules.</li>
+    <li><b>Papan tamu “Menunggu pertandingan”:</b> normal untuk <code>idwt.web.id</code> polos saat ini — gunakan <code>idwt.web.id/#KODE</code>.</li>
+    <li><b>hasil.html kosong:</b> penulisan hasil otomatis belum terpasang di operator (lihat status di atas) dan izin <code>results</code> harus ada di Rules.</li>
+    <li><b>Operator meminta putar layar:</b> konsol memang wajib landscape.</li>
+    <li><b>Wasit “Kode tidak ditemukan”:</b> partai itu belum dibuat di setup.</li>
   </ul>
 
   <div class="foot">idwt.web.id · Live Taekwondo</div>
