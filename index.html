@@ -25,73 +25,74 @@
   .live{flex:1;display:none;flex-direction:column;min-height:0}
   .live.on{display:flex}
 
-  /* Header Paling Atas: Kategori Partai */
-  .head{display:flex;align-items:center;justify-content:center;gap:14px;padding:6px 10px;background:#000000;border-bottom:2px solid #1a212c;min-height:36px;flex-shrink:0}
-  .head .cat{font-family:'Oswald',sans-serif;font-size:clamp(15px,2.6vw,22px);font-weight:700;letter-spacing:.06em;color:#fff}
-  .head .no{font-size:clamp(12px,2vw,15px);color:var(--gold);font-weight:800;letter-spacing:.08em}
+  /* Header Paling Atas (Kategori Partai) */
+  .head{display:flex;align-items:center;justify-content:center;gap:14px;padding:8px 10px;background:#000000;border-bottom:2px solid #1a212c;min-height:40px;flex-shrink:0}
+  .head .cat{font-family:'Oswald',sans-serif;font-size:clamp(18px,3vw,30px);font-weight:700;letter-spacing:.08em;color:#fff}
+  .head .no{font-size:clamp(14px,2.2vw,20px);color:var(--gold);font-weight:800;letter-spacing:.08em}
   .head.hide{display:none}
 
   /* Banner Pemenang / Peringatan */
-  .banner{text-align:center;padding:6px;font-size:clamp(12px,2.4vw,16px);font-weight:900;letter-spacing:.05em;background:var(--gold);color:#1A1206;display:none;flex-shrink:0}
+  .banner{text-align:center;padding:8px;font-size:clamp(14px,2.6vw,20px);font-weight:900;letter-spacing:.05em;background:var(--gold);color:#1A1206;display:none;flex-shrink:0}
   .banner.on{display:block}
   .banner.win{background:var(--ok);color:#08130C}
 
-  /* Dua Sisi Arena (Biru & Merah) */
+  /* Grid Utama Pembagi Biru & Merah */
   .grid{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0;position:relative}
-  .team{display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:8px;transition:background .2s}
   
-  .team.chung{background:linear-gradient(165deg, #123d7a 0%, #0a172c 70%, #060910 100%)}
-  .team.hong{background:linear-gradient(165deg, #821410 0%, #300a08 70%, #100606 100%)}
+  .team{display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:10px;transition:background .2s}
+  .team.chung{background:linear-gradient(160deg, #103b7c 0%, #071324 75%, #04070d 100%)}
+  .team.hong{background:linear-gradient(160deg, #8c1612 0%, #280807 75%, #0d0404 100%)}
 
-  /* Bagian Atas Sisi (Nama, Wilayah/Negara, dan Bendera) - Diberi jarak agar tidak tertutupi kotak tengah */
-  .team .top{display:flex;align-items:flex-start;position:absolute;top:10px;left:10px;right:10px;gap:8px;z-index:2}
-  .team.chung .top{justify-content:flex-start; padding-right: 95px;} /* Beri ruang untuk kotak tengah di tengah */
-  .team.hong .top{justify-content:flex-end; padding-left: 95px;}
+  /* Bagian Atas Sisi (Bendera & Nama Atlet) */
+  .team .top{display:flex;align-items:flex-start;position:absolute;top:15px;gap:12px;z-index:2}
+  .team.chung .top{left:20px;}
+  .team.hong .top{right:20px;flex-direction:row-reverse;}
 
-  .team .info-box{display:flex;flex-direction:column;gap:2px;min-width:0}
-  .team.chung .info-box{align-items:flex-start;text-align:left}
-  .team.hong .info-box{align-items:flex-end;text-align:right}
-
-  .team .nm{font-family:'Montserrat',sans-serif;font-size:clamp(14px,3vw,26px);font-weight:900;line-height:1.1;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%}
-  .team.chung .nm{color:#FFFFFF}.team.hong .nm{color:#FFFFFF}
-  
-  .team .ctry{font-size:clamp(10px,1.8vw,14px);color:var(--mut);font-weight:700;letter-spacing:.05em;text-transform:uppercase}
-  
-  /* Bendera Negara */
-  .team .img{width:clamp(36px,5.5vw,56px);height:clamp(24px,3.8vw,38px);object-fit:cover;border-radius:3px;border:1px solid rgba(255,255,255,.3);display:none;flex-shrink:0;box-shadow:0 2px 5px rgba(0,0,0,0.3)}
+  .team .flag-box{display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .team .img{width:clamp(50px,8vw,80px);height:clamp(35px,5.5vw,55px);object-fit:cover;border-radius:4px;border:1px solid rgba(255,255,255,.3);display:none;box-shadow:0 3px 8px rgba(0,0,0,0.4)}
   .team .img.on{display:block}
+  .team .code{font-size:clamp(11px,1.6vw,14px);font-weight:800;color:var(--mut);letter-spacing:.1em}
 
-  /* Skor Utama (Angka besar di tengah area masing-masing) */
-  .team .sc{font-family:'Montserrat',sans-serif;font-size:clamp(90px,26vw,220px);font-weight:900;line-height:.9;font-variant-numeric:tabular-nums;margin-top:15px;text-shadow: 0 4px 20px rgba(0,0,0,0.4)}
+  .team .info-box{display:flex;flex-direction:column;gap:2px;}
+  .team.chung .info-box{align-items:flex-start;}
+  .team.hong .info-box{align-items:flex-end;text-align:right;}
+
+  .team .nm{font-family:'Montserrat',sans-serif;font-size:clamp(24px,5.5vw,50px);font-weight:900;line-height:1.1;text-transform:uppercase;letter-spacing:.02em;color:#fff}
+  .team .ctry{font-size:clamp(12px,2vw,17px);color:var(--mut);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+
+  /* Skor Utama (Angka Sangat Besar di Tengah Lapangan) */
+  .team .sc{font-family:'Montserrat',sans-serif;font-size:clamp(120px,32vw,280px);font-weight:900;line-height:.9;font-variant-numeric:tabular-nums;margin-top:10px;text-shadow: 0 6px 25px rgba(0,0,0,0.5)}
   .team.bump .sc{animation:bump .4s}
   @keyframes bump{0%{transform:scale(1)}30%{transform:scale(1.16);color:var(--gold)}100%{transform:scale(1)}}
 
-  /* Statistik bawah tiap sisi */
-  .stats{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:clamp(12px,2.5vw,30px);z-index:2}
+  /* Statistik Bawah (Gam-jeom, Hits, #Won) */
+  .stats{position:absolute;bottom:15px;display:flex;gap:clamp(15px,3vw,35px);z-index:2}
+  .team.chung .stats{left:25px;}
+  .team.hong .stats{right:25px;}
   .stat{text-align:center}
-  .stat .k{font-size:clamp(9px,1.4vw,12px);letter-spacing:.1em;color:var(--mut);font-weight:700;text-transform:uppercase}
-  .stat .v{font-family:'Montserrat',sans-serif;font-size:clamp(16px,3.2vw,28px);font-weight:900;font-variant-numeric:tabular-nums}
+  .stat .k{font-size:clamp(10px,1.5vw,13px);letter-spacing:.1em;color:var(--mut);font-weight:700;text-transform:uppercase}
+  .stat .v{font-family:'Montserrat',sans-serif;font-size:clamp(18px,3.8vw,34px);font-weight:900;font-variant-numeric:tabular-nums}
   .stat.won .v{color:var(--gold)}
 
-  /* Kotak Tengah: Menggantung pas di atas perbatasan grid tanpa menutupi nama */
-  .center{position:absolute;left:50%;top:6px;transform:translateX(-50%);
-          display:flex;flex-direction:column;align-items:stretch;
-          background:#000000;width:clamp(130px,20vw,190px);border-radius:10px;border:2px solid #222b38;z-index:5;box-shadow:0 6px 20px rgba(0,0,0,0.7);overflow:hidden}
+  /* KOTAK TENGAH: Presisi Membelah Layar (Match, Timer, Round) */
+  .center{position:absolute;left:50%;top:0;bottom:0;transform:translateX(-50%);
+          display:flex;flex-direction:column;align-items:stretch;justify-content:center;
+          background:#000000;width:clamp(150px,22vw,220px);border-left:2px solid #222b38;border-right:2px solid #222b38;z-index:5;box-shadow:0 0 30px rgba(0,0,0,0.8)}
   
-  .center .match-box{background:#000;padding:5px 4px;text-align:center;border-bottom:2px solid #222b38}
-  .center .match-title{font-size:clamp(13px,2vw,18px);font-weight:900;letter-spacing:.08em;color:#fff}
-  .center .match-label{font-size:clamp(8px,1.2vw,11px);font-weight:700;letter-spacing:.15em;color:var(--mut)}
+  .center .match-box{background:#000;padding:12px 6px;text-align:center;border-bottom:2px solid #222b38}
+  .center .match-title{font-size:clamp(16px,2.8vw,26px);font-weight:900;letter-spacing:.08em;color:#fff}
+  .center .match-label{font-size:clamp(10px,1.4vw,13px);font-weight:700;letter-spacing:.15em;color:var(--mut)}
 
-  .center .clock-box{background:var(--gold);padding:5px 4px;text-align:center}
-  .center .clock{font-family:'Montserrat',sans-serif;font-size:clamp(24px,5.5vw,46px);font-weight:900;font-variant-numeric:tabular-nums;line-height:1;color:#1A1206}
+  .center .clock-box{background:var(--gold);padding:14px 6px;text-align:center}
+  .center .clock{font-family:'Montserrat',sans-serif;font-size:clamp(32px,6.5vw,64px);font-weight:900;font-variant-numeric:tabular-nums;line-height:1;color:#1A1206}
   .center .clock.brk{color:#D9261E}
 
-  .center .round-box{background:#000;padding:5px 4px;text-align:center}
-  .center .rnd{font-size:clamp(9px,1.3vw,12px);font-weight:700;letter-spacing:.15em;color:var(--mut);text-transform:uppercase}
+  .center .round-box{background:#000;padding:12px 6px;text-align:center;border-top:2px solid #222b38}
+  .center .rnd{font-size:clamp(11px,1.6vw,14px);font-weight:700;letter-spacing:.15em;color:var(--mut);text-transform:uppercase}
   .center .rnd span{color:#fff;font-weight:900}
 
   /* Footer Bawah */
-  .foot{display:flex;align-items:center;gap:8px;padding:5px 14px;font-size:11px;color:var(--mut);border-top:1px solid #1a212c;background:#05070a;flex-shrink:0}
+  .foot{display:flex;align-items:center;gap:8px;padding:6px 14px;font-size:11px;color:var(--mut);border-top:1px solid #1a212c;background:#05070a;flex-shrink:0}
   .foot .dot{width:8px;height:8px;border-radius:50%;background:var(--mut)}
   .foot .dot.on{background:var(--ok)}
   .foot .brand{margin-left:auto;letter-spacing:.1em}
@@ -134,49 +135,55 @@
   </div>
 
   <div class="live" id="live">
-    <!-- Header Utama Kategori / Turnamen -->
+    <!-- Header Paling Atas -->
     <div class="head" id="head">
-      <span class="cat" id="cat">Festival</span>
+      <span class="cat" id="cat"></span>
       <span class="no" id="no"></span>
     </div>
     <div class="banner" id="banner"></div>
     
     <div class="grid">
-      <!-- KOTAK TENGAH (NOMOR MATCH, TIMER, DAN ROUND) PINDAH KE ATAS GRID -->
-      <div class="center">
-        <div class="match-box">
-          <div class="match-title" id="matchCode">A0001</div>
-          <div class="match-label">MATCH</div>
-        </div>
-        <div class="clock-box">
-          <div class="clock" id="clock">1:53</div>
-        </div>
-        <div class="round-box">
-          <div class="rnd"><span id="round">2</span> ROUND</div>
-        </div>
-      </div>
-
       <!-- SISI KIRI (CHUNG / BLUE) -->
       <div class="team chung" id="teamChung">
         <div class="top">
-          <img class="img" id="imgChung" alt="">
+          <div class="flag-box">
+            <img class="img" id="imgChung" alt="">
+            <div class="code" id="codeChung"></div>
+          </div>
           <div class="info-box">
-            <div class="nm" id="nmChung">Hanief Safaraz</div>
-            <div class="ctry" id="ctryChung">UIN Ar-Raniri</div>
+            <div class="nm" id="nmChung">Jim</div>
+            <div class="ctry" id="ctryChung">Washington</div>
           </div>
         </div>
-        <div class="sc" id="scChung">2</div>
+        <div class="sc" id="scChung">0</div>
         <div class="stats" id="statChung"></div>
+      </div>
+
+      <!-- KOTAK TENGAH (MEMBELAH LAYAR) -->
+      <div class="center">
+        <div class="match-box">
+          <div class="match-title" id="matchCode">A1001</div>
+          <div class="match-label">MATCH</div>
+        </div>
+        <div class="clock-box">
+          <div class="clock" id="clock">0:36</div>
+        </div>
+        <div class="round-box">
+          <div class="rnd"><span>1</span> ROUND</div>
+        </div>
       </div>
 
       <!-- SISI KANAN (HONG / RED) -->
       <div class="team hong" id="teamHong">
         <div class="top">
-          <div class="info-box">
-            <div class="nm" id="nmHong">Abdullah Shie</div>
-            <div class="ctry" id="ctryHong">GI-EXCO</div>
+          <div class="flag-box">
+            <img class="img" id="imgHong" alt="">
+            <div class="code" id="codeHong"></div>
           </div>
-          <img class="img" id="imgHong" alt="">
+          <div class="info-box">
+            <div class="nm" id="nmHong">LeSai</div>
+            <div class="ctry" id="ctryHong">New York</div>
+          </div>
         </div>
         <div class="sc" id="scHong">0</div>
         <div class="stats" id="statHong"></div>
@@ -184,7 +191,7 @@
     </div>
 
     <div class="foot">
-      <span class="dot" id="dot"></span><span id="connText">tersambung</span>
+      <span class="dot" id="dot"></span><span id="connText">menyambung…</span>
       <span class="brand">idwt.web.id &middot; V1 &middot; &copy;SRISP 2026</span>
     </div>
   </div>
@@ -229,20 +236,25 @@ function pasang(kode){
 }
 
 function renderMeta(m){
-  $('cat').textContent = m.category || "Festival";
-  $('matchCode').textContent = m.no ? "A" + String(m.no).padStart(4, '0') : "A0001";
+  $('cat').textContent = m.category || "";
+  $('no').textContent = m.no ? "PARTAI "+m.no : "";
+  $('matchCode').textContent = m.no ? "A" + String(m.no).padStart(4, '0') : "A1001";
+  
   const c=m.chung||{}, h=m.hong||{};
-  $('nmChung').textContent = c.name || "Hanief Safaraz";
-  $('nmHong').textContent  = h.name || "Abdullah Shie";
-  $('ctryChung').textContent = c.country || "UIN Ar-Raniri";
-  $('ctryHong').textContent  = h.country || "GI-EXCO";
+  $('nmChung').textContent = c.name || "Jim";
+  $('nmHong').textContent  = h.name || "LeSai";
+  $('ctryChung').textContent = c.country || "Washington";
+  $('ctryHong').textContent  = h.country || "New York";
+  $('codeChung').textContent = c.code || "";
+  $('codeHong').textContent  = h.code || "";
+  
   setImg('imgChung', c.img); setImg('imgHong', h.img);
   applyConfig();
 }
 function setImg(id,url){ const el=$(id); if(url){ el.src=url; el.dataset.has="1"; } else { el.removeAttribute('src'); el.dataset.has=""; } applyConfig(); }
 
 function applyConfig(){
-  $('head').classList.toggle('hide', !cfg.showHeader || (!$('cat').textContent && !$('matchCode').textContent));
+  $('head').classList.toggle('hide', !cfg.showHeader || (!$('cat').textContent && !$('no').textContent));
   ['Chung','Hong'].forEach(s=>{
     $('nm'+s).style.display = cfg.showNames ? "" : "none";
     $('ctry'+s).style.display = cfg.showCountry ? "" : "none";
@@ -260,7 +272,9 @@ function renderState(st){
   prev={chung:st.chung||0,hong:st.hong||0}; pertama=false;
   $('scChung').textContent=st.chung||0;
   $('scHong').textContent =st.hong||0;
-  $('round').textContent  =st.round||2;
+  
+  const rBox = document.querySelector('.rnd');
+  if(rBox) rBox.innerHTML = `<span>${st.round||1}</span> ROUND`;
 
   const b=$('banner');
   if(st.matchOver && st.winner){ b.textContent="PEMENANG: "+(st.winner==="chung"?($('nmChung').textContent):($('nmHong').textContent)); b.className="banner win on"; }
@@ -288,7 +302,7 @@ function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
 function fmt(sec){ const m=Math.floor(sec/60); return `${m}:${String(sec%60).padStart(2,'0')}`; }
 function renderClock(){
   const s=cur; if(!s)return;
-  let sec = s.phase==="running" ? Math.max(0,Math.round((s.endAt-Date.now())/1000)) : (s.remaining??113);
+  let sec = s.phase==="running" ? Math.max(0,Math.round((s.endAt-Date.now())/1000)) : (s.remaining??36);
   if(prevRem!==null && prevRem>0 && sec===0 && s.phase==="running" && !sudahBel){ bunyiBel(); sudahBel=true; }
   if(sec>0) sudahBel=false; prevRem=sec;
   const c=$('clock'); c.textContent=fmt(sec); c.classList.toggle('brk', s.phase==="break");
