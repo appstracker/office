@@ -169,7 +169,7 @@
   <!-- ===== MASUK ===== -->
   <div class="gate" id="gate">
     <h1>Wasit</h1>
-    <p>Masukkan kode pertandingan dari operator, lalu pilih nomor kursimu.</p>
+    <p>Masukkan kode pertandingan dari operator, lalu pilih nomor kursimu. HP akan bergetar saat kamu menekan Mulai Bertugas &mdash; bila tidak terasa, matikan mode senyap/hening.</p>
     <div>
       <label>Kode Pertandingan</label>
       <input id="codeInput" type="text" placeholder="TKD-1234" autocomplete="off">
@@ -239,6 +239,7 @@ $('pick').addEventListener('click', e => {
 
 $('btnEnter').addEventListener('click', async () => {
   layarPenuh();   // masuk layar penuh selagi masih ada ketukan pengguna
+  getar(80);      // tes getar: kalau tidak terasa, perangkat/mode senyap yang memblokir
   const kode = $('codeInput').value.trim().toUpperCase();
   $('gateErr').textContent = "";
   if (!kode){ $('gateErr').textContent = "Isi kode pertandingan."; return; }
@@ -304,7 +305,7 @@ function buatTombol(){
 function getar(p){ if (navigator.vibrate) navigator.vibrate(p); }
 
 function tekan(side, techId){
-  getar(30);                        // konfirmasi pencet terdaftar
+  getar(70);                        // konfirmasi pencet terdaftar
   statusFlash('Terdaftar', 'reg');
   push(ref(db, `matches/${KODE}/presses`), {
     judge: JUDGE, side, tech: techId, t: serverTimestamp()
@@ -340,7 +341,7 @@ function tekanPlus(side){
   const s = plusState[side];
   if (!s.dasar) return;             // belum aktif: abaikan
   const dasar = s.dasar, pts = PLUS_BONUS[dasar];
-  getar(30);
+  getar(70);
   statusFlash(`Putar +${pts} terdaftar`, 'reg');
   push(ref(db, `matches/${KODE}/presses`), {
     judge: JUDGE, side, tech: `plus_${dasar}`, pts, t: serverTimestamp()
@@ -364,7 +365,7 @@ function dengarValid(){
     const v = snap.val() || 0;
     if (v && v !== lastValidSeen){
       lastValidSeen = v;
-      getar([30,40,30]);
+      getar([70,60,70]);
       statusFlash('Poin sah', 'valid');
     }
   });
