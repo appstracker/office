@@ -97,8 +97,9 @@
   .center .clock.brk{color:#C3221B}
 
   .center .round-box{background:#000;padding:12px 6px;text-align:center;border-top:2px solid #222}
-  .center .rnd{font-size:clamp(10px,1.4vw,12px);font-weight:700;letter-spacing:.15em;color:var(--mut);text-transform:uppercase}
-  .center .rnd span{color:#fff;font-weight:900}
+  .center .rnd{display:flex;flex-direction:column;align-items:center;gap:1px}
+  .center .rnd .rn{font-size:clamp(28px,6.5vw,54px);font-weight:900;color:#fff;line-height:1;font-variant-numeric:tabular-nums}
+  .center .rnd .rl{font-size:clamp(8px,1.1vw,11px);font-weight:700;letter-spacing:.15em;color:var(--mut)}
 
   /* Footer Bawah */
   .foot{display:flex;align-items:center;gap:8px;padding:5px 14px;font-size:11px;color:var(--mut);border-top:1px solid #1a212c;background:#05070a;flex-shrink:0}
@@ -109,6 +110,63 @@
   .sound{position:fixed;right:12px;bottom:34px;z-index:9;background:var(--gold);color:#1A1206;border:none;
          border-radius:22px;padding:10px 16px;font-size:13px;font-weight:800;box-shadow:0 4px 16px rgba(0,0,0,.4)}
   .sound.hide{display:none}
+
+  /* ==== Tahap 2: status jelas ==== */
+  #statusBar{position:fixed;left:50%;top:8.5dvh;transform:translateX(-50%);z-index:40;display:none;
+    padding:8px 26px;border-radius:30px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;
+    font-size:clamp(15px,3.2vw,30px);background:var(--gold);color:#1A1206;
+    box-shadow:0 6px 22px rgba(0,0,0,.5);animation:stPulse 1s ease-in-out infinite}
+  #statusBar.on{display:block}
+  #statusBar.pause{background:#2a2f3a;color:#fff}
+  @keyframes stPulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+  /* ==== deklarasi pemenang RONDE (kedip) ==== */
+  #roundFlash{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;align-items:center;
+    justify-content:center;gap:10px;background:rgba(0,0,0,.6);text-align:center;padding:20px}
+  #roundFlash.on{display:flex;animation:flashPulse .8s ease-in-out infinite}
+  #roundFlash .rfName{font-size:clamp(44px,13vw,130px);font-weight:900;text-transform:uppercase;line-height:1;
+    text-shadow:0 4px 26px rgba(0,0,0,.7)}
+  #roundFlash .rfSub{font-size:clamp(16px,4.2vw,38px);font-weight:900;letter-spacing:.08em;color:#fff}
+  #roundFlash.chung .rfName{color:#6aa8ff}
+  #roundFlash.hong .rfName{color:#ff7a7a}
+
+  /* ==== deklarasi pemenang PARTAI (kedip meriah) ==== */
+  #matchFlash{position:fixed;inset:0;z-index:70;display:none;flex-direction:column;align-items:center;
+    justify-content:center;text-align:center;padding:20px}
+  #matchFlash.on{display:flex;animation:mfBg 1.1s ease-in-out infinite}
+  #matchFlash.chung{background:radial-gradient(circle at 50% 45%,#1f6bf5,#0a2f7a)}
+  #matchFlash.hong{background:radial-gradient(circle at 50% 45%,#e01414,#6e0000)}
+  #matchFlash .mfLabel{font-size:clamp(13px,3vw,26px);font-weight:800;letter-spacing:.3em;color:rgba(255,255,255,.85)}
+  #matchFlash .mfName{font-size:clamp(48px,14vw,150px);font-weight:900;color:#fff;text-transform:uppercase;
+    line-height:1;margin:10px 0;text-shadow:0 6px 30px rgba(0,0,0,.55)}
+  #matchFlash .mfSub{font-size:clamp(17px,4.4vw,36px);font-weight:900;letter-spacing:.06em;color:var(--gold)}
+  @keyframes flashPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.97)}}
+  @keyframes mfBg{0%,100%{filter:brightness(1)}50%{filter:brightness(1.4)}}
+
+  /* ==== menu pertandingan ==== */
+  #btnMenu{position:fixed;left:12px;bottom:34px;z-index:38;background:rgba(255,255,255,.14);
+    color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:22px;padding:8px 15px;
+    font-size:12px;font-weight:800;letter-spacing:.05em;backdrop-filter:blur(4px);cursor:pointer}
+  #btnMenu:hover{background:rgba(255,255,255,.26)}
+  #menuPanel{position:fixed;inset:0;z-index:50;display:none;background:rgba(6,8,12,.93);
+    flex-direction:column;padding:14px}
+  #menuPanel.on{display:flex}
+  #menuPanel .mpHead{display:flex;align-items:center;justify-content:space-between;color:#fff;
+    font-size:clamp(16px,3vw,22px);font-weight:900;letter-spacing:.05em;padding:6px 4px 12px;border-bottom:1px solid #222}
+  #menuPanel .mpHead button{background:none;border:none;color:#fff;font-size:28px;line-height:1;font-weight:700}
+  #menuPanel .mpBody{flex:1;overflow-y:auto;padding:10px 2px;display:flex;flex-direction:column;gap:8px}
+  .mpSec{color:var(--mut);font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-top:8px}
+  .mpSec b{color:#fff;margin-left:4px}
+  .mpItem{background:#12161d;border:1px solid #232a35;border-radius:10px;padding:10px 12px}
+  .mpItem.sedang{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
+  .mpTop{font-size:12px;font-weight:800;letter-spacing:.06em;color:var(--gold);margin-bottom:6px}
+  .mpVs{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .mpx{color:var(--mut);font-size:12px;font-weight:700}
+  .mpChip{font-size:clamp(13px,2.4vw,16px);font-weight:800;color:#fff;padding:3px 10px;border-radius:6px}
+  .mpChip.chung{background:var(--chung)} .mpChip.hong{background:var(--hong)}
+  .mpKet{margin-top:7px;font-size:13px;font-weight:700;color:#cdd4de}
+  .mpKet.live{color:var(--gold)}
+  .mpEmpty{color:var(--mut);text-align:center;padding:30px;font-size:14px}
 </style>
 </head>
 <body>
@@ -217,6 +275,29 @@ background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAoAAAAKECAMAAACggn
     </div>
   </div>
 
+  <!-- status jelas: TIME OUT / KYE-SHI / SIGHAN / JEDA -->
+  <div id="statusBar" aria-hidden="true"></div>
+
+  <!-- deklarasi pemenang RONDE (kedip) -->
+  <div id="roundFlash" aria-hidden="true">
+    <div class="rfName" id="rfName"></div>
+    <div class="rfSub" id="rfSub"></div>
+  </div>
+
+  <!-- deklarasi pemenang PARTAI (kedip meriah) -->
+  <div id="matchFlash" aria-hidden="true">
+    <div class="mfLabel">PEMENANG PARTAI</div>
+    <div class="mfName" id="mfName"></div>
+    <div class="mfSub" id="mfSub"></div>
+  </div>
+
+  <!-- menu pertandingan -->
+  <button id="btnMenu" aria-label="Menu pertandingan">&#9776; Jadwal</button>
+  <div id="menuPanel" aria-hidden="true">
+    <div class="mpHead"><span>Menu Pertandingan</span><button id="mpClose" aria-label="Tutup">&times;</button></div>
+    <div class="mpBody" id="mpBody"></div>
+  </div>
+
   <button class="sound hide" id="btnSound">🔊 Aktifkan suara</button>
 
 <script type="module">
@@ -267,7 +348,7 @@ function pasang(kode){
       $('mainGrid').classList.toggle('swapped', isSwapped);
     }
   });
-  onValue(ref(db,`matches/${kode}/state`), s=>{ const st=s.val(); if(st) renderState(st); });
+  onValue(ref(db,`matches/${kode}/state`), s=>{ if(kode!==KODE) return; const st=s.val(); if(st) renderState(st); });
 }
 
 function renderMeta(m){
@@ -309,15 +390,69 @@ function renderState(st){
   $('scHong').textContent =st.hong||0;
   
   const rBox = document.querySelector('.rnd');
-  if(rBox) rBox.innerHTML = `<span>${st.round||1}</span> ROUND`;
+  if(rBox) rBox.innerHTML = `<div class="rn">${st.round||1}</div><div class="rl">RONDE / 3</div>`;
 
   const b=$('banner');
   if(st.matchOver && st.winner){ b.textContent="PEMENANG: "+(st.winner==="chung"?($('nmChung').textContent):($('nmHong').textContent)); b.className="banner win on"; }
-  else if(st.phase==="stopped"){ b.textContent="PERTANDINGAN DIHENTIKAN"; b.className="banner on"; }
   else b.className="banner";
 
+  renderStatus(st);
+  renderDeklarasi(st);
   renderStats();
   renderClock();
+}
+
+/* ===== status jelas: TIME OUT / KYE-SHI / SIGHAN / JEDA ===== */
+function renderStatus(st){
+  const el=$('statusBar'); if(!el) return;
+  el.classList.remove('pause');
+  if(st.phase==="break"){ el.textContent = st.breakLabel || "TIME OUT"; el.classList.add('on'); }
+  else if(st.phase==="paused"){ el.textContent = "JEDA"; el.classList.add('on','pause'); }
+  else { el.classList.remove('on'); }
+}
+
+/* ===== label jenis kemenangan (singkatan) ===== */
+function typeLabel(t){
+  return ({PTS:'MENANG POIN',PTG:'POINT GAP',PUN:'PUN · 5 GAM-JEOM',SUP:'SUP · KEUNGGULAN',
+           RSC:'RSC · WASIT HENTIKAN',WDR:'WDR · MUNDUR',DSQ:'DSQ · DISKUALIFIKASI'})[t] || (t||'MENANG');
+}
+
+/* ===== deklarasi pemenang RONDE (kedip) & PARTAI (kedip meriah) ===== */
+let lastFlashAt=null, sudahMuat=false, matchSuara=false, flashTimer=null;
+function renderDeklarasi(st){
+  if(st.matchOver && st.winner){
+    tampilkanMenangPartai(st);
+    if(st.lastRound) lastFlashAt = st.lastRound.at;
+    sudahMuat = true;
+    return;
+  }
+  $('matchFlash').className=""; matchSuara=false;
+  if(st.lastRound && st.lastRound.at !== lastFlashAt){
+    if(sudahMuat) flashRonde(st.lastRound);
+    lastFlashAt = st.lastRound.at;
+  }
+  sudahMuat = true;
+}
+function flashRonde(lr){
+  const w = lr.winner;
+  const nm = w==="chung" ? $('nmChung').textContent : $('nmHong').textContent;
+  $('rfName').textContent = nm;
+  $('rfSub').textContent  = `RONDE ${lr.round} — ${typeLabel(lr.type)}`;
+  const el=$('roundFlash'); el.className = "on "+w;
+  bunyiPoin();
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(()=>{ el.className=""; }, 5000);
+}
+function tampilkanMenangPartai(st){
+  const w=st.winner;
+  const nm = w==="chung" ? $('nmChung').textContent : $('nmHong').textContent;
+  const wc=st.wonChung||0, wh=st.wonHong||0;
+  const tally = w==="chung" ? `${wc}-${wh}` : `${wh}-${wc}`;
+  $('mfName').textContent = nm;
+  $('mfSub').textContent  = `${typeLabel(st.winType)} · MENANG ${tally}`;
+  $('roundFlash').className="";
+  const el=$('matchFlash'); el.className = "on "+w;
+  if(!matchSuara){ bunyiBel(); matchSuara=true; }
 }
 
 function renderStats(){
@@ -346,6 +481,66 @@ setInterval(renderClock,250);
 
 function bump(id){ const el=$(id); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
 function koneksi(){ onValue(ref(db,".info/connected"), s=>{ const on=s.val()===true; $('dot').classList.toggle('on',on); $('connText').textContent=on?"tersambung":"terputus"; }); }
+
+/* ===== Menu Pertandingan: Akan / Sedang / Sudah Bertanding ===== */
+const esc = t => String(t==null?'':t).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+let allMatches={}, allResults={}, liveKode=null;
+onValue(ref(db,"live"),    s=>{ liveKode = s.val()||null; renderMenu(); }, ()=>{});
+onValue(ref(db,"matches"), s=>{ allMatches = s.val()||{}; renderMenu(); }, ()=>{});
+onValue(ref(db,"results"), s=>{ allResults = s.val()||{}; renderMenu(); }, ()=>{});
+
+function statusPartai(code){
+  if(allResults[code]) return "sudah";
+  if(code===liveKode)  return "sedang";
+  return "akan";
+}
+function chip(sd, d){
+  d=d||{};
+  const nm = d.name || (sd==='chung'?'Chung':'Hong');
+  const ct = d.country ? ` · ${d.country}` : '';
+  return `<span class="mpChip ${sd}">${esc(nm)}${esc(ct)}</span>`;
+}
+function renderMenu(){
+  const body=$('mpBody'); if(!body) return;
+  const codes=Object.keys(allMatches);
+  const buckets={sedang:[],akan:[],sudah:[]};
+  codes.forEach(c=>{ buckets[statusPartai(c)].push(c); });
+  const noOf = c => (allMatches[c] && allMatches[c].meta && +allMatches[c].meta.no) || 0;
+  const byNo = (a,b) => noOf(a)-noOf(b);
+  buckets.sedang.sort(byNo); buckets.akan.sort(byNo); buckets.sudah.sort(byNo);
+
+  let html='';
+  const seksi=(judul,arr,cls)=>{
+    if(!arr.length) return;
+    html+=`<div class="mpSec ${cls}">${judul} <b>${arr.length}</b></div>`;
+    arr.forEach(c=>{
+      const m=(allMatches[c] && allMatches[c].meta) || {};
+      const head=[m.no?`PARTAI ${esc(m.no)}`:'',esc(m.category||'')].filter(Boolean).join(' · ')||'—';
+      let ket='';
+      if(cls==='sudah'){
+        const r=allResults[c]||{};
+        const w=r.winner==='chung'?(r.chungName||'Chung'):(r.hongName||'Hong');
+        const wc=r.wonChung||0, wh=r.wonHong||0;
+        const tally=r.winner==='chung'?`${wc}-${wh}`:`${wh}-${wc}`;
+        ket=`<div class="mpKet">🏆 ${esc(w)} menang ${tally}${r.winType?` · ${esc(r.winType)}`:''}</div>`;
+      } else if(cls==='sedang'){
+        ket=`<div class="mpKet live">● Sedang berlangsung</div>`;
+      } else {
+        ket=`<div class="mpKet">Belum dimulai</div>`;
+      }
+      html+=`<div class="mpItem ${cls}"><div class="mpTop">${head}</div>`+
+            `<div class="mpVs">${chip('chung',m.chung)}<span class="mpx">vs</span>${chip('hong',m.hong)}</div>`+
+            `${ket}</div>`;
+    });
+  };
+  seksi('🔴 Sedang Bertanding', buckets.sedang, 'sedang');
+  seksi('🟡 Akan Bertanding',  buckets.akan,   'akan');
+  seksi('✅ Sudah Bertanding',  buckets.sudah,  'sudah');
+  body.innerHTML = html || '<div class="mpEmpty">Belum ada pertandingan.</div>';
+}
+$('btnMenu').addEventListener('click', ()=>{ renderMenu(); $('menuPanel').classList.add('on'); });
+$('mpClose').addEventListener('click', ()=> $('menuPanel').classList.remove('on'));
+$('menuPanel').addEventListener('click', e=>{ if(e.target===$('menuPanel')) $('menuPanel').classList.remove('on'); });
 </script>
 
 <script>
