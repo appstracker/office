@@ -154,6 +154,9 @@
   .modal .box .no{background:var(--line);color:var(--ink)}
   .rfield{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;font-size:14px;text-align:left}
   .rfield input{width:90px;padding:9px;border-radius:8px;border:1px solid var(--line);background:#0E1116;color:var(--ink);font-size:15px;text-align:center}
+  .wtype{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+  .wtype button{padding:10px;border:1px solid var(--line);border-radius:8px;background:#0E1116;color:var(--ink);font-size:13px;font-weight:700;text-align:left}
+  .wtype button.on{background:var(--gold);color:#1A1206;border-color:var(--gold)}
 
   /* pagar portrait */
   .rotguard{position:fixed;inset:0;background:#0B0E13;z-index:400;display:none;align-items:center;justify-content:center;text-align:center;padding:24px}
@@ -321,9 +324,9 @@
       <button class="tbtn" id="btnInjury">&#128657; Injury</button>
       <button class="tbtn" id="btnHasil">&#128203; Result</button>
       <button class="tbtn off">&#127909; C</button>
-      <button class="tbtn play" id="btnPlay">&#9654;</button>
-      <button class="tbtn pause" id="btnPause">&#9208;</button>
+      <button class="tbtn play" id="btnToggle">&#9654;</button>
       <button class="tbtn" id="btnTimeout">&#9200; T.Out</button>
+      <button class="tbtn" id="btnSighan">&#9202; Sighan</button>
       <button class="tbtn" id="btnPower">&#9211; Off</button>
       <button class="tbtn off">&#127909; H</button>
       <button class="tbtn" id="btnScoreTamu">&#128421; Score</button>
@@ -362,6 +365,12 @@
   <div class="modal" id="modalWin">
     <div class="box">
       <p id="wMsg">…</p>
+      <div class="wtype" id="wType">
+        <button data-t="RSC" class="on">RSC &middot; Wasit hentikan (cedera/knockdown)</button>
+        <button data-t="WDR">WDR &middot; Mengundurkan diri</button>
+        <button data-t="DSQ">DSQ &middot; Diskualifikasi</button>
+        <button data-t="SUP">SUP &middot; Menang keunggulan</button>
+      </div>
       <div class="btns">
         <button class="no" id="wNo">Batal</button>
         <button class="yes" id="wYes">Ya, Nyatakan</button>
@@ -375,7 +384,7 @@
       <p style="font-weight:800">Pengaturan Aturan</p>
       <div class="rfield"><span>Durasi ronde (detik)</span><input id="inpRonde" type="number" min="10"></div>
       <div class="rfield"><span>Time out / Kye-shi (detik)</span><input id="inpRehat" type="number" min="10"></div>
-      <div class="rfield"><span>Selisih akhir ronde</span><input id="inpSelisih" type="number" min="1"></div>
+      <div class="rfield"><span>Point Gap (selisih akhir)</span><input id="inpSelisih" type="number" min="1"></div>
       <div class="rfield"><span>Wasit minimal (2-dari-3)</span><input id="inpWasit" type="number" min="1" max="3"></div>
       <div class="btns">
         <button class="no" id="ruleTutup">Tutup</button>
@@ -406,7 +415,7 @@ let KODE = "", base = null;
 /* ====== state pertandingan (operator satu-satunya penulis) ====== */
 let S = { chung:0, hong:0, round:1, phase:"ready", remaining:RONDE_DETIK, endAt:0, lastValid:0,
           gamjeomChung:0, gamjeomHong:0, hitsChung:0, hitsHong:0, wonChung:0, wonHong:0,
-          matchOver:false, winner:null };
+          matchOver:false, winner:null, winType:null, lastRound:null };
 
 function writeState(){ set(ref(db, `matches/${KODE}/state`), S); }
 
@@ -532,7 +541,7 @@ function cekSelisih(){
   if (S.phase === "over") return;
   const selisih = Math.abs(S.chung - S.hong);
   if (selisih >= SELISIH_STOP){
-    prosesRonde(S.chung > S.hong ? "chung" : "hong");
+    prosesRonde(S.chung > S.hong ? "chung" : "hong", "PTG");   // Point Gap
   }
 }
 
@@ -542,16 +551,21 @@ const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
 function akhiriRonde(){
   if (S.phase === "over") return;
   hentikanClock();
-  if (S.chung > S.hong) prosesRonde("chung");
-  else if (S.hong > S.chung) prosesRonde("hong");
-  else { $('modalRound').classList.add('on'); }   // seri → operator pilih
+  if (S.chung > S.hong) prosesRonde("chung", "PTS");
+  else if (S.hong > S.chung) prosesRonde("hong", "PTS");
+  else { $('modalRound').classList.add('on'); }   // seri → operator pilih (SUP)
 }
-function prosesRonde(w){
+function prosesRonde(w, type){
+  type = type || 'PTS';
   $('modalRound').classList.remove('on');
-  tulisRonde(w);   // arsipkan skor ronde ini SEBELUM direset
+  // siarkan hasil ronde agar papan tamu bisa menampilkan pemenang + jenis kemenangan
+  S.lastRound = { round: S.round, winner: w, type: type,
+                  chung: S.chung||0, hong: S.hong||0, at: Date.now() };
+  tulisRonde(w, type);   // arsipkan skor ronde ini SEBELUM direset
   S['won'+cap(w)] = (S['won'+cap(w)]||0) + 1;
-  if (S['won'+cap(w)] >= 2){
-    S.matchOver = true; S.winner = w; S.phase = "over";
+  // DSQ = menang ronde sekaligus partai
+  if (S['won'+cap(w)] >= 2 || type === 'DSQ'){
+    S.matchOver = true; S.winner = w; S.winType = type; S.phase = "over";
     if (clockTick){ clearInterval(clockTick); clockTick=null; }
     tulisHasil();
     writeState(); render(); return;
@@ -564,13 +578,27 @@ function prosesRonde(w){
   writeState(); render();
 }
 $('btnNext').addEventListener('click', akhiriRonde);
-$('rChung').addEventListener('click', () => prosesRonde('chung'));
-$('rHong').addEventListener('click',  () => prosesRonde('hong'));
+$('rChung').addEventListener('click', () => prosesRonde('chung', 'SUP'));
+$('rHong').addEventListener('click',  () => prosesRonde('hong', 'SUP'));
 $('rCancel').addEventListener('click', () => $('modalRound').classList.remove('on'));
 
 /* gam-jeom → +1 lawan, dan catat penghitung gam-jeom sisi yang melanggar */
-$('gjChung').addEventListener('click', () => { S.gamjeomChung=(S.gamjeomChung||0)+1; tambahGj('chung'); beriPoin('hong', 1, 'gamjeom'); });
-$('gjHong').addEventListener('click',  () => { S.gamjeomHong=(S.gamjeomHong||0)+1;  tambahGj('hong'); beriPoin('chung', 1, 'gamjeom'); });
+const GAMJEOM_MAKS = 5;   // 5 gam-jeom dalam satu ronde → ronde otomatis untuk lawan (PUN)
+function gamjeom(offender){
+  const other = offender === 'chung' ? 'hong' : 'chung';
+  const rondeAwal = S.round;
+  if (offender === 'chung') S.gamjeomChung = (S.gamjeomChung||0)+1;
+  else S.gamjeomHong = (S.gamjeomHong||0)+1;
+  tambahGj(offender);
+  const total = offender === 'chung' ? S.gamjeomChung : S.gamjeomHong;
+  beriPoin(other, 1, 'gamjeom');   // gam-jeom = +1 untuk lawan
+  if (total >= GAMJEOM_MAKS && S.phase !== 'over' && S.round === rondeAwal
+      && (S.gamjeomChung >= GAMJEOM_MAKS || S.gamjeomHong >= GAMJEOM_MAKS)){
+    prosesRonde(other, 'PUN');
+  }
+}
+$('gjChung').addEventListener('click', () => gamjeom('chung'));
+$('gjHong').addEventListener('click',  () => gamjeom('hong'));
 
 /* undo */
 $('btnUndo').addEventListener('click', () => {
@@ -584,7 +612,7 @@ $('btnUndo').addEventListener('click', () => {
 $('btnReset').addEventListener('click', () => {
   S = { chung:0, hong:0, round:1, phase:"ready", remaining:RONDE_DETIK, endAt:0, lastValid:0,
         gamjeomChung:0, gamjeomHong:0, hitsChung:0, hitsHong:0, wonChung:0, wonHong:0,
-        matchOver:false, winner:null };
+        matchOver:false, winner:null, winType:null, lastRound:null };
   ['atkC','atkH','gjC','gjH'].forEach(k => { for (let r=1;r<=3;r++) S[k+r]=0; });
   logSkor.length = 0; seqLog = 0;
   riwayat = [];
@@ -644,6 +672,14 @@ function render(){
   const b = $('btnStart');
   b.textContent = S.phase==="running" ? "Jeda" : (S.phase==="over" ? "Selesai" : "Mulai");
   b.classList.toggle('go', S.phase!=="running" && S.phase!=="over");
+  const tg = $('btnToggle');
+  if (tg){
+    const run = S.phase === "running";
+    tg.innerHTML = run ? "&#9208;" : "&#9654;";        // ⏸ saat berjalan, ▶ saat jeda/siap
+    tg.classList.toggle('pause', run);
+    tg.classList.toggle('play', !run);
+    tg.classList.toggle('off', S.phase === "over");
+  }
   renderClock();
 }
 function renderClock(){
@@ -692,22 +728,32 @@ function mintaDeklarasi(w){
 $('btnWinC').addEventListener('click', () => mintaDeklarasi('chung'));
 $('btnWinH').addEventListener('click', () => mintaDeklarasi('hong'));
 $('wNo').addEventListener('click', () => $('modalWin').classList.remove('on'));
+let winType = 'RSC';
+document.querySelectorAll('#wType button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    winType = btn.dataset.t;
+    document.querySelectorAll('#wType button').forEach(b => b.classList.toggle('on', b === btn));
+  });
+});
 $('wYes').addEventListener('click', () => {
   if (!winPilih) return;
   $('modalWin').classList.remove('on');
   hentikanClock();
   if (clockTick){ clearInterval(clockTick); clockTick = null; }
-  S.matchOver = true; S.winner = winPilih; S.phase = "over";
-  if ((S.chung||0) > 0 || (S.hong||0) > 0) tulisRonde(winPilih);  // ronde berjalan ikut diarsipkan
+  // siarkan hasil ronde berjalan + arsipkan
+  S.lastRound = { round: S.round, winner: winPilih, type: winType,
+                  chung: S.chung||0, hong: S.hong||0, at: Date.now() };
+  tulisRonde(winPilih, winType);
+  S.matchOver = true; S.winner = winPilih; S.winType = winType; S.phase = "over";
   tulisHasil();
   writeState(); render();
 });
 
 /* ====== penulisan hasil otomatis → arsip hasil.html (butuh izin Rules: results & rounds) ====== */
 let META = null;
-function tulisRonde(pemenang){
+function tulisRonde(pemenang, type){
   set(ref(db, `matches/${KODE}/rounds/r${S.round}`), {
-    round: S.round, chung: S.chung || 0, hong: S.hong || 0, winner: pemenang
+    round: S.round, chung: S.chung || 0, hong: S.hong || 0, winner: pemenang, winType: type || 'PTS'
   }).catch(e => console.warn('rounds gagal tersimpan:', e && e.message));
 }
 function tulisHasil(){
@@ -718,7 +764,7 @@ function tulisHasil(){
     chungName: (m.chung && m.chung.name) || "Chung",
     hongName: (m.hong && m.hong.name) || "Hong",
     wonChung: S.wonChung || 0, wonHong: S.wonHong || 0,
-    winner: S.winner || "", selesai: Date.now()
+    winner: S.winner || "", winType: S.winType || "", selesai: Date.now()
   }).catch(e => console.warn('hasil gagal tersimpan:', e && e.message));
 }
 
@@ -778,18 +824,20 @@ function manual(side, val, label){
 });
 
 /* ====== Time out / Kye-shi (fase break) ====== */
-function mulaiBreak(label){
+const SIGHAN_DETIK = 30;   // Sighan = jeda resmi 30 detik
+function mulaiBreak(label, dur){
   if (S.phase === "over") return;
   hentikanClock();
-  S.phase = "break"; S.breakLabel = label; S.breakEnd = Date.now() + REHAT_DETIK*1000;
+  S.phase = "break"; S.breakLabel = label;
+  S.breakEnd = Date.now() + (dur || REHAT_DETIK)*1000;
   writeState(); render();
 }
 $('btnTimeout').addEventListener('click', () => mulaiBreak('TIME OUT'));
-$('btnInjury').addEventListener('click', () => mulaiBreak('KYE-SHI'));
+$('btnInjury').addEventListener('click',  () => mulaiBreak('KYE-SHI'));
+$('btnSighan').addEventListener('click',  () => mulaiBreak('SIGHAN', SIGHAN_DETIK));
 
 /* ====== toolbar ====== */
-$('btnPlay').addEventListener('click', () => { if (S.phase !== "running") $('btnStart').click(); });
-$('btnPause').addEventListener('click', () => { if (S.phase === "running") $('btnStart').click(); });
+$('btnToggle').addEventListener('click', () => $('btnStart').click());   // satu tombol: Mulai / Jeda
 $('btnTest').addEventListener('click', () => { S.lastValid = Date.now(); writeState(); });   // getar semua wasit
 $('btnScoreTamu').addEventListener('click', () => window.open('./', '_blank'));
 $('btnHasil').addEventListener('click', () => window.open('./hasil.html', '_blank'));
