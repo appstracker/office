@@ -46,8 +46,10 @@
   .top .title{flex:1;text-align:center;font-weight:800;font-size:clamp(12px,2.6dvh,18px);letter-spacing:.06em;
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .top .conn{display:flex;align-items:center;gap:5px;color:var(--mut);font-size:clamp(10px,2dvh,12px)}
-  .dot{width:8px;height:8px;border-radius:50%;background:var(--mut)}
-  .dot.on{background:var(--ok)}
+  .dot{width:8px;height:8px;border-radius:50%;background:#e0453a}
+  .dot.on{background:var(--ok);animation:dotBlink 1.1s ease-in-out infinite}
+  @keyframes dotBlink{0%,100%{opacity:1}50%{opacity:.3}}
+  #console.offline .tbtn, #console.offline .sbtn{opacity:.4;pointer-events:none;filter:grayscale(.7)}
   .exit{background:none;border:1px solid #333B47;color:#9AA3B2;border-radius:7px;padding:.5dvh 9px;font-size:clamp(10px,2dvh,12px);font-weight:700}
 
   /* papan utama */
@@ -415,7 +417,7 @@ let KODE = "", base = null;
 /* ====== state pertandingan (operator satu-satunya penulis) ====== */
 let S = { chung:0, hong:0, round:1, phase:"ready", remaining:RONDE_DETIK, endAt:0, lastValid:0,
           gamjeomChung:0, gamjeomHong:0, hitsChung:0, hitsHong:0, wonChung:0, wonHong:0,
-          matchOver:false, winner:null, winType:null, lastRound:null };
+          matchOver:false, winner:null, winType:null, lastRound:null, lastHit:null };
 
 function writeState(){ set(ref(db, `matches/${KODE}/state`), S); }
 
@@ -480,6 +482,7 @@ function pantauKoneksi(){
   onValue(ref(db, ".info/connected"), snap => {
     const on = snap.val() === true;
     $('connDot').classList.toggle('on', on);
+    $('console').classList.toggle('offline', !on);
     $('connText').textContent = on ? "tersambung" : "terputus";
   });
 }
@@ -531,6 +534,9 @@ let riwayat = [];
 function beriPoin(side, pts, detail){
   if (S.phase === "over") return;
   S[side] = Math.max(0, S[side] + pts);
+  if (detail && !String(detail).startsWith('plus_') && detail !== 'gamjeom' && detail !== 'batal'){
+    S.lastHit = { side, tech: detail, at: Date.now() };   // untuk ikon pukulan di papan tamu
+  }
   riwayat.push({ side, pts });
   catatLog(side, pts, detail);
   cekSelisih();
@@ -612,7 +618,7 @@ $('btnUndo').addEventListener('click', () => {
 $('btnReset').addEventListener('click', () => {
   S = { chung:0, hong:0, round:1, phase:"ready", remaining:RONDE_DETIK, endAt:0, lastValid:0,
         gamjeomChung:0, gamjeomHong:0, hitsChung:0, hitsHong:0, wonChung:0, wonHong:0,
-        matchOver:false, winner:null, winType:null, lastRound:null };
+        matchOver:false, winner:null, winType:null, lastRound:null, lastHit:null };
   ['atkC','atkH','gjC','gjH'].forEach(k => { for (let r=1;r<=3;r++) S[k+r]=0; });
   logSkor.length = 0; seqLog = 0;
   riwayat = [];
