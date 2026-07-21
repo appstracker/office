@@ -35,11 +35,8 @@
   .bar{display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--panel);border-bottom:1px solid var(--line);font-size:12px;color:var(--mut)}
   .bar b{color:var(--ink)}
   .bar .conn{margin-left:auto;display:flex;align-items:center;gap:6px}
-  .dot{width:9px;height:9px;border-radius:50%;background:#e0453a}
-  .dot.on{background:var(--ok);animation:dotBlink 1.1s ease-in-out infinite}
-  @keyframes dotBlink{0%,100%{opacity:1}50%{opacity:.3}}
-  #screen.terkunci .pbtn{filter:grayscale(1) brightness(.45);pointer-events:none}
-  #screen.terkunci .pbtn.plus.on{animation:none}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--mut)}
+  .dot.on{background:var(--ok)}
   .status{text-align:center;padding:8px;font-size:13px;font-weight:700;color:var(--mut);border-bottom:1px solid var(--line);min-height:36px;transition:background .12s,color .12s}
   .status.reg{color:#0E1116;background:var(--gold)}
   .status.valid{color:#08130C;background:var(--ok)}
@@ -251,7 +248,7 @@ $('btnEnter').addEventListener('click', async () => {
 });
 
 // cek pertandingan benar-benar ada (dibuat operator) sebelum masuk
-async function coba(kode, judge, viaURL){
+async function coba(kode, judge){
   $('gateErr').textContent = "Memeriksa kode…";
   let ada = false;
   try{
@@ -259,16 +256,6 @@ async function coba(kode, judge, viaURL){
     ada = snap.exists();
   }catch(e){ $('gateErr').textContent = "Gagal menghubungi server."; return; }
   if (!ada){ $('gateErr').textContent = "Kode tidak ditemukan. Minta kode ke operator."; return; }
-  // satu nomor wasit hanya untuk satu perangkat: tolak bila slot sedang online
-  if (!viaURL){
-    try{
-      const js = await get(ref(db, `matches/${kode}/judges/${judge}`));
-      if (js.exists()){
-        $('gateErr').textContent = `Wasit ${judge} sedang online di perangkat lain. Pilih nomor lain atau tunggu ia keluar.`;
-        return;
-      }
-    }catch(e){ /* bila Rules membatasi baca judges, lewati pemeriksaan */ }
-  }
   KODE = kode; JUDGE = judge;
   location.hash = `${KODE}.${JUDGE}`;   // agar refresh menyambung lagi
   masuk();
@@ -293,7 +280,7 @@ async function autoMasuk(){
   const h = decodeURIComponent(location.hash.replace(/^#/, ""));
   const m = h.match(/^(.+)\.([123])$/);
   if (!m) return;
-  await coba(m[1].toUpperCase(), Number(m[2]), true);   // reconnect dari URL: lewati kunci slot
+  await coba(m[1].toUpperCase(), Number(m[2]));
 }
 
 /* tombol */
@@ -318,7 +305,6 @@ function buatTombol(){
 function getar(p){ if (navigator.vibrate) navigator.vibrate(p); }
 
 function tekan(side, techId){
-  if (terkunci) return;             // hanya saat tersambung & waktu berjalan/jeda
   getar(70);                        // konfirmasi pencet terdaftar
   statusFlash('Terdaftar', 'reg');
   push(ref(db, `matches/${KODE}/presses`), {
@@ -352,7 +338,6 @@ function matikanPlus(side){
 }
 
 function tekanPlus(side){
-  if (terkunci) return;
   const s = plusState[side];
   if (!s.dasar) return;             // belum aktif: abaikan
   const dasar = s.dasar, pts = PLUS_BONUS[dasar];
@@ -370,7 +355,7 @@ function statusFlash(teks, cls){
   el.textContent = teks;
   el.classList.remove('reg','valid'); el.classList.add(cls);
   clearTimeout(stTimer);
-  stTimer = setTimeout(() => { el.classList.remove('reg','valid'); el.textContent = statusDasar; }, 450);
+  stTimer = setTimeout(() => { el.classList.remove('reg','valid'); el.textContent = 'Tekan saat serangan sah'; }, 450);
 }
 
 /* getar dobel saat operator sahkan poin (tanpa angka) */
@@ -395,7 +380,6 @@ function dengarWaktu(){
     if (stateWaktu) $('roundView').textContent = stateWaktu.round || 1;
     // kunci: saat pertandingan berjalan, tombol keluar disembunyikan
     $('btnExit').classList.toggle('hide', stateWaktu && stateWaktu.phase === "running");
-    perbaruiKunci();
     renderWaktu();
   });
   setInterval(renderWaktu, 250);
@@ -408,28 +392,12 @@ function renderWaktu(){
   $('clockView').textContent = fmt(s);
 }
 
-let online = false, terkunci = true, statusDasar = 'Tekan saat serangan sah';
 function pantauKoneksi(){
   onValue(ref(db, ".info/connected"), snap => {
-    online = snap.val() === true;
-    $('connDot').classList.toggle('on', online);
-    $('connText').textContent = online ? "tersambung" : "terputus";
-    perbaruiKunci();
+    const on = snap.val() === true;
+    $('connDot').classList.toggle('on', on);
+    $('connText').textContent = on ? "tersambung" : "terputus";
   });
-}
-/* tombol wasit hanya aktif saat TERSAMBUNG dan waktu sudah di-play/pause operator */
-function perbaruiKunci(){
-  const fase = stateWaktu ? stateWaktu.phase : null;
-  const aktif = (fase === 'running' || fase === 'paused');
-  terkunci = !online || !aktif;
-  $('screen').classList.toggle('terkunci', terkunci);
-  if (!online) statusDasar = 'Koneksi terputus — menyambung…';
-  else if (fase === 'break') statusDasar = 'Jeda resmi — tunggu lanjut';
-  else if (fase === 'over') statusDasar = 'Pertandingan selesai';
-  else if (!aktif) statusDasar = 'Menunggu wasit utama memulai';
-  else statusDasar = 'Tekan saat serangan sah';
-  const el = $('status');
-  if (el && !el.classList.contains('reg') && !el.classList.contains('valid')) el.textContent = statusDasar;
 }
 
 /* layar penuh: sembunyikan bilah alamat browser (perlu ketukan pengguna) */
