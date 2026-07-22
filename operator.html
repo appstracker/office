@@ -335,6 +335,7 @@
       <button class="tbtn" id="btnReverse">&#8646; Reverse</button>
       <button class="tbtn" id="btnRule">&#9881; Rule</button>
       <button class="tbtn" id="btnReg">&#128221; Reg.</button>
+      <button class="tbtn" id="btnPdf">&#128196; PDF</button>
     </div>
 
     <div class="rotguard"><div class="rmsg"><span class="ric">&#128260;</span>Putar perangkat ke posisi <b>landscape</b><br>untuk memakai konsol operator.</div></div>
@@ -502,6 +503,8 @@ function dengarPencet(){
 }
 
 function prosesPencet(key, p, t){
+  // poin wasit hanya dihitung saat waktu BERJALAN; tekanan saat jeda/stop/istirahat diabaikan
+  if (S.phase !== 'running'){ remove(ref(db, `matches/${KODE}/presses/${key}`)); return; }
   pending.push({ key, judge:p.judge, side:p.side, tech:p.tech, t, recv:Date.now() });
   pending = pending.filter(x => Date.now() - x.recv <= Math.max(JENDELA_MS, JENDELA_PLUS_MS)*3);
 
@@ -880,7 +883,7 @@ function renderWasit(){
   for (let n=1; n<=3; n++){
     const el = $('jw'+n); if (!el) continue;
     const d = dataWasit[n];
-    const hidup = d && d.t && (Date.now() - d.t < 25000);
+    const hidup = !!d;   // node ada = wasit online (onDisconnect menghapusnya saat terputus)
     el.classList.toggle('on', !!hidup);
     const b = el.querySelector('b');
     if (b) b.textContent = hidup ? (d.b != null ? d.b + '%' : 'OK') : '\u2014';
@@ -907,11 +910,164 @@ function isiSisi(sd, d){
     : `<span>&#127937;</span><i>${neg || '\u2014'}</i>`;
 }
 
+/* ====== ekspor riwayat pertandingan ke PDF ====== */
+function muatJsPDF(){
+  return new Promise((res, rej) => {
+    if (window.jspdf && window.jspdf.jsPDF) return res(window.jspdf.jsPDF);
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload = () => (window.jspdf && window.jspdf.jsPDF)
+      ? res(window.jspdf.jsPDF) : rej(new Error('pustaka tidak termuat'));
+    s.onerror = () => rej(new Error('gagal memuat pustaka PDF'));
+    document.head.appendChild(s);
+  });
+}
+async function eksporPDF(){
+  const b = $('btnPdf'); if (!b) return;
+  const asli = b.innerHTML;
+  b.innerHTML = '&#8987; PDF';
+  try{
+    const JsPDF = await muatJsPDF();
+    const d = new JsPDF({ unit:'mm', format:'a4' });
+    const m   = META || {};
+    const nmC = (m.chung && m.chung.name)    || 'CHUNG';
+    const nmH = (m.hong  && m.hong.name)     || 'HONG';
+    const ngC = (m.chung && m.chung.country) || '';
+    const ngH = (m.hong  && m.hong.country)  || '';
+    const L = 14, R = 196, BAWAH = 280;
+    let y = 16;
+    const cek = butuh => { if (y + butuh > BAWAH){ d.addPage(); y = 16; } };
+
+    /* judul */
+    d.setFont('helvetica','bold'); d.setFontSize(15);
+    d.text('RIWAYAT PERTANDINGAN', L, y); y += 5;
+    d.setFont('helvetica','normal'); d.setFontSize(8.5); d.setTextColor(110);
+    d.text('idwt.web.id  \u00b7  dicetak ' + new Date().toLocaleString('id-ID'), L, y);
+    d.setTextColor(0); y += 4;
+    d.setDrawColor(200); d.line(L, y, R, y); y += 7;
+
+    /* identitas partai */
+    d.setFont('helvetica','bold'); d.setFontSize(10.5);
+    d.text([m.no ? 'PARTAI ' + m.no : 'PARTAI \u2014', m.category || '']
+            .filter(Boolean).join('   \u00b7   '), L, y);
+    y += 6;
+
+    /* papan skor ringkas */
+    const HB = 16, WB = 86;
+    d.setFillColor(23,92,230);  d.rect(L,      y, WB, HB, 'F');
+    d.setFillColor(207,0,0);    d.rect(L+96,   y, WB, HB, 'F');
+    d.setTextColor(255);
+    d.setFont('helvetica','bold'); d.setFontSize(11);
+    d.text(String(nmC).toUpperCase(), L+4,    y+7,  { maxWidth: 56 });
+    d.text(String(nmH).toUpperCase(), L+100,  y+7,  { maxWidth: 56 });
+    d.setFont('helvetica','normal'); d.setFontSize(7.5);
+    if (ngC) d.text(String(ngC).toUpperCase(), L+4,   y+12, { maxWidth: 56 });
+    if (ngH) d.text(String(ngH).toUpperCase(), L+100, y+12, { maxWidth: 56 });
+    d.setFont('helvetica','bold'); d.setFontSize(17);
+    d.text(String(S.chung||0), L+WB-4,    y+12, { align:'right' });
+    d.text(String(S.hong||0),  L+96+WB-4, y+12, { align:'right' });
+    d.setTextColor(0); y += HB + 7;
+
+    /* ringkasan */
+    d.setFont('helvetica','normal'); d.setFontSize(9);
+    d.text('Ronde berjalan: ' + (S.round||1) + ' / 3', L, y);
+    d.text('Ronde dimenangkan:  ' + nmC + ' ' + (S.wonChung||0) +
+           '   \u2014   ' + nmH + ' ' + (S.wonHong||0), L+62, y);
+    y += 5;
+    if (S.matchOver && S.winner){
+      d.setFont('helvetica','bold');
+      d.text('Pemenang partai: ' + (S.winner==='chung' ? nmC : nmH) +
+             (S.winType ? '   (' + S.winType + ')' : ''), L, y);
+      y += 5;
+    }
+    y += 3;
+
+    /* statistik per ronde */
+    const cs = [L, L+30, L+68, L+106, L+144];
+    d.setFont('helvetica','bold'); d.setFontSize(9);
+    d.text('STATISTIK PER RONDE', L, y); y += 4;
+    d.setFillColor(238); d.rect(L, y, R-L, 6, 'F');
+    d.setFontSize(7.5);
+    ['RONDE','SERANGAN BIRU','GAM-JEOM BIRU','SERANGAN MERAH','GAM-JEOM MERAH']
+      .forEach((t,i) => d.text(t, cs[i]+2, y+4));
+    y += 6;
+    d.setFont('helvetica','normal'); d.setFontSize(8);
+    for (let r=1; r<=3; r++){
+      [ 'R'+r, String(S['atkC'+r]||0), String(S['gjC'+r]||0),
+        String(S['atkH'+r]||0), String(S['gjH'+r]||0) ]
+        .forEach((t,i) => d.text(t, cs[i]+2, y+4));
+      d.setDrawColor(225); d.line(L, y+5.5, R, y+5.5);
+      y += 6;
+    }
+    y += 7;
+
+    /* tabel log per sisi */
+    const cl = [L, L+16, L+30, L+46, L+150];
+    function tabelLog(judul, rgb, sisi){
+      const baris = logSkor.filter(v => v.side === sisi);
+      cek(18);
+      d.setFont('helvetica','bold'); d.setFontSize(9.5);
+      d.setTextColor(rgb[0], rgb[1], rgb[2]);
+      d.text(judul, L, y); d.setTextColor(0); y += 4;
+      d.setFillColor(238); d.rect(L, y, R-L, 6, 'F');
+      d.setFontSize(7.5);
+      ['SEQ','RONDE','POIN','DETAIL','WAKTU'].forEach((t,i) => d.text(t, cl[i]+2, y+4));
+      y += 6;
+      d.setFont('helvetica','normal'); d.setFontSize(8);
+      if (!baris.length){
+        d.setTextColor(140); d.text('(belum ada catatan)', L+2, y+4);
+        d.setTextColor(0); y += 9; return;
+      }
+      baris.forEach(v => {
+        cek(8);
+        [ String(v.q), 'R'+v.r, (v.pts>0?'+':'') + v.pts, String(v.nm), String(v.tm) ]
+          .forEach((t,i) => d.text(t, cl[i]+2, y+4));
+        d.setDrawColor(230); d.line(L, y+5.5, R, y+5.5);
+        y += 6;
+      });
+      y += 7;
+    }
+    tabelLog('CATATAN BIRU \u00b7 ' + String(nmC).toUpperCase(),  [23,92,230], 'chung');
+    tabelLog('CATATAN MERAH \u00b7 ' + String(nmH).toUpperCase(), [207,0,0],   'hong');
+
+    /* catatan kaki */
+    cek(14);
+    d.setFontSize(7); d.setTextColor(130);
+    d.text('Catatan: riwayat terekam di perangkat operator selama sesi berjalan '
+         + '(maksimal 80 kejadian terakhir) dan tidak tersimpan setelah halaman dimuat ulang. '
+         + 'Rekap resmi seluruh partai tersedia di halaman Result.', L, y, { maxWidth: R-L });
+
+    const bersih = t => String(t).replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'');
+    d.save('Riwayat_' + bersih(m.no || KODE) + '_' + bersih(nmC) + '-vs-' + bersih(nmH) + '.pdf');
+  }catch(e){
+    alert('Tidak bisa membuat PDF: ' + (e && e.message ? e.message : e)
+        + '.\nPembuatan PDF memerlukan koneksi internet saat pertama kali dipakai.');
+  }finally{
+    b.innerHTML = asli;
+  }
+}
+$('btnPdf').addEventListener('click', () => { if (KODE) eksporPDF(); });
+
 /* ====== keluar / tombol back ====== */
 function mintaKeluar(){ $('modal').classList.add('on'); }
 $('btnExit').addEventListener('click', mintaKeluar);
 $('mNo').addEventListener('click', () => $('modal').classList.remove('on'));
 $('mYes').addEventListener('click', async () => { try{ await signOut(auth); }catch(e){} location.hash = ""; location.reload(); });
+
+/* ====== pintasan papan tik (laptop) ======
+   Spasi = Mulai/Jeda · T = Time out · S = Sighan · K = Kye-shi */
+document.addEventListener('keydown', e => {
+  if (!KODE) return;                                    // belum masuk konsol
+  if (e.ctrlKey || e.altKey || e.metaKey) return;
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+  if (document.querySelector('.modal.on')) return;      // ada jendela terbuka
+  const k = (e.key || '').toLowerCase();
+  if (e.code === 'Space'){ e.preventDefault(); $('btnStart').click(); }
+  else if (k === 't'){ e.preventDefault(); $('btnTimeout').click(); }
+  else if (k === 's'){ e.preventDefault(); $('btnSighan').click(); }
+  else if (k === 'k'){ e.preventDefault(); $('btnInjury').click(); }
+});
 
 // cegat tombol back HP setelah masuk konsol
 function pasangBack(){

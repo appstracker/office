@@ -157,7 +157,8 @@
   #menuPanel .mpBody{flex:1;overflow-y:auto;padding:10px 2px;display:flex;flex-direction:column;gap:8px}
   .mpSec{color:var(--mut);font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-top:8px}
   .mpSec b{color:#fff;margin-left:4px}
-  .mpItem{background:#12161d;border:1px solid #232a35;border-radius:10px;padding:10px 12px}
+  .mpItem{background:#12161d;border:1px solid #232a35;border-radius:10px;padding:10px 12px;cursor:pointer;transition:border-color .15s}
+  .mpItem:active{border-color:var(--gold)}
   .mpItem.sedang{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
   .mpTop{font-size:12px;font-weight:800;letter-spacing:.06em;color:var(--gold);margin-bottom:6px}
   .mpVs{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -169,24 +170,36 @@
   .mpEmpty{color:var(--mut);text-align:center;padding:30px;font-size:14px}
 
   /* ==== ikon rekaman pukulan di bilah ==== */
-  .hitrow{position:absolute;top:clamp(74px,11vh,104px);display:flex;flex-wrap:wrap;gap:5px;max-width:44%;z-index:3;pointer-events:none}
-  .team.chung .hitrow{left:20px;justify-content:flex-start}
-  .team.hong  .hitrow{right:20px;justify-content:flex-end}
-  .hchip{width:clamp(20px,3.4vw,30px);height:clamp(20px,3.4vw,30px);border-radius:50%;
-    display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.16);
-    border:1px solid rgba(255,255,255,.4);animation:chipIn .35s ease-out}
-  .hchip svg{width:64%;height:64%;fill:#fff}
-  .hchip.head{background:rgba(245,179,37,.9);border-color:#fff}
+  .hitrow{position:absolute;bottom:clamp(56px,9vh,84px);display:flex;flex-direction:column;gap:3px;
+    max-width:40%;z-index:3;pointer-events:none}
+  .team.chung .hitrow{left:22px;align-items:flex-start}
+  .team.hong  .hitrow{right:22px;align-items:flex-end}
+  .hline{display:flex;flex-wrap:wrap;gap:2px}
+  .team.hong .hline{justify-content:flex-end}
+  .hchip{width:clamp(10px,1.5vw,14px);height:clamp(10px,1.5vw,14px);border-radius:4px;
+    display:grid;place-items:center;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.32);
+    animation:chipIn .3s cubic-bezier(.2,1.5,.45,1)}
+  .hchip svg{width:68%;height:68%}
+  .team.chung .hchip svg{fill:#134FC4}
+  .team.hong  .hchip svg{fill:#B00000}
+  .hchip.head{background:linear-gradient(180deg,#FFD35C,#F0A81C)}
   .hchip.head svg{fill:#1A1206}
-  @keyframes chipIn{0%{transform:scale(0);opacity:0}70%{transform:scale(1.25)}100%{transform:scale(1);opacity:1}}
+  .hchip.spin{outline:1.5px solid rgba(26,18,6,.75);outline-offset:1px}
+  @keyframes chipIn{0%{transform:scale(0) rotate(-12deg);opacity:0}
+    65%{transform:scale(1.22) rotate(2deg)}100%{transform:scale(1) rotate(0);opacity:1}}
   .hitPop{position:absolute;top:46%;left:50%;transform:translate(-50%,-50%);z-index:6;
     width:clamp(80px,18vw,160px);height:clamp(80px,18vw,160px);pointer-events:none;
-    animation:hitPop .9s ease-out forwards;filter:drop-shadow(0 6px 18px rgba(0,0,0,.5))}
-  .hitPop svg{width:100%;height:100%;fill:#F5B325}
-  @keyframes hitPop{0%{transform:translate(-50%,-50%) scale(.3);opacity:0}
-    22%{transform:translate(-50%,-50%) scale(1.45);opacity:1}
-    60%{transform:translate(-50%,-50%) scale(1.1);opacity:1}
-    100%{transform:translate(-50%,-50%) scale(.45);opacity:0}}
+    animation:hitPop .95s cubic-bezier(.2,.9,.3,1) forwards;filter:drop-shadow(0 6px 18px rgba(0,0,0,.55))}
+  .hitPop svg{width:100%;height:100%;fill:#FFC93C}
+  .hitRing{position:absolute;top:46%;left:50%;width:clamp(70px,16vw,140px);height:clamp(70px,16vw,140px);
+    border-radius:50%;border:5px solid rgba(255,201,60,.95);transform:translate(-50%,-50%);
+    pointer-events:none;z-index:5;animation:hitRing .85s ease-out forwards}
+  @keyframes hitPop{0%{transform:translate(-50%,-50%) scale(.25) rotate(-18deg);opacity:0}
+    20%{transform:translate(-50%,-50%) scale(1.5) rotate(4deg);opacity:1}
+    45%{transform:translate(-50%,-50%) scale(1.18) rotate(0);opacity:1}
+    100%{transform:translate(-50%,-50%) scale(.34);opacity:0}}
+  @keyframes hitRing{0%{transform:translate(-50%,-50%) scale(.3);opacity:.95}
+    100%{transform:translate(-50%,-50%) scale(2.2);opacity:0}}
 </style>
 </head>
 <body>
@@ -256,7 +269,11 @@ background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAoAAAAKECAMAAACggn
         </div>
         <div class="sc" id="scChung">0</div>
         <div class="stats" id="statChung"></div>
-        <div class="hitrow" id="hitIconChung"></div>
+        <div class="hitrow" id="hitIconChung">
+          <div class="hline" data-g="pukulan"></div>
+          <div class="hline" data-g="badan"></div>
+          <div class="hline" data-g="kepala"></div>
+        </div>
       </div>
 
       <!-- KOTAK TENGAH -->
@@ -287,7 +304,11 @@ background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAoAAAAKECAMAAACggn
         </div>
         <div class="sc" id="scHong">0</div>
         <div class="stats" id="statHong"></div>
-        <div class="hitrow" id="hitIconHong"></div>
+        <div class="hitrow" id="hitIconHong">
+          <div class="hline" data-g="pukulan"></div>
+          <div class="hline" data-g="badan"></div>
+          <div class="hline" data-g="kepala"></div>
+        </div>
       </div>
     </div>
 
@@ -351,18 +372,34 @@ $('btnSwitch').addEventListener('click', () => {
 
 /* ===== Ambil Pertandingan Live ===== */
 let KODE=null;
-const hash=decodeURIComponent(location.hash.replace(/^#/,"")).toUpperCase();
-if (hash){ pasang(hash); }
-else onValue(ref(db,"live"), s=>{ const k=s.val(); if(k&&k!==KODE)pasang(k); else if(!k){KODE=null;$('live').classList.remove('on');$('wait').style.display='flex';} });
+/* URL tamu memakai NOMOR PARTAI (mis. idwt.web.id/#170845), bukan kode pertandingan */
+let hashTarget = decodeURIComponent(location.hash.replace(/^#/,"")).trim().toUpperCase() || null;
+if (!hashTarget)
+  onValue(ref(db,"live"), s=>{ const k=s.val(); if(k&&k!==KODE)pasang(k); else if(!k){KODE=null;$('live').classList.remove('on');$('wait').style.display='flex';} });
+/* cocokkan nomor partai pada URL dengan kode pertandingan (dijalankan saat daftar partai tiba) */
+function resolveHash(){
+  if(!hashTarget) return;
+  for(const c of Object.keys(allMatches)){
+    const m = allMatches[c] && allMatches[c].meta;
+    if(m && m.no != null && String(m.no).trim().toUpperCase() === hashTarget){ pasang(c); return; }
+  }
+  if(allMatches[hashTarget]) pasang(hashTarget);   // dukungan link lama berbasis kode
+}
+window.addEventListener('hashchange', ()=>{
+  hashTarget = decodeURIComponent(location.hash.replace(/^#/,"")).trim().toUpperCase() || null;
+  resolveHash();
+});
 
 let cfg={showNames:true,showImg:true,showCountry:true,showHeader:true,showGamjeom:true,showHits:true,showWon:true,sideSwap:false};
 let prev={chung:0,hong:0}, prevRem=null, sudahBel=false, pertama=true, cur=null;
 
 function pasang(kode){
+  if(kode===KODE) return;          // hindari langganan ganda saat berpindah partai
   KODE=kode; $('wait').style.display='none'; $('live').classList.add('on');
   koneksi();
-  onValue(ref(db,`matches/${kode}/meta`), s=> renderMeta(s.val()||{}));
+  onValue(ref(db,`matches/${kode}/meta`), s=>{ if(kode!==KODE) return; renderMeta(s.val()||{}); });
   onValue(ref(db,`matches/${kode}/config`), s=>{ 
+    if(kode!==KODE) return;
     cfg=Object.assign(cfg,s.val()||{}); 
     applyConfig(); 
     if(cfg.sideSwap !== undefined) {
@@ -376,7 +413,7 @@ function pasang(kode){
 function renderMeta(m){
   $('cat').textContent = m.category || "";
   $('no').textContent = m.no ? "PARTAI "+m.no : "";
-  $('matchCode').textContent = m.no ? "A" + String(m.no).padStart(4, '0') : "A1001";
+  $('matchCode').textContent = m.no ? String(m.no) : "\u2014";
   
   const c=m.chung||{}, h=m.hong||{};
   $('nmChung').textContent = c.name || "Jim";
@@ -426,9 +463,9 @@ function renderState(st){
 }
 
 /* ===== ikon rekaman pukulan di bilah + animasi kepala ===== */
-const SVG_HEAD = '<svg viewBox="0 0 24 24"><circle cx="12" cy="7.5" r="4.3"/><path d="M3.5 21c0-4.5 3.8-7.2 8.5-7.2s8.5 2.7 8.5 7.2z"/></svg>';
-const SVG_BODY = '<svg viewBox="0 0 24 24"><path d="M12 2.5l7.5 2.4v6c0 5.2-3.2 8.3-7.5 10.6C7.7 19.2 4.5 16.1 4.5 10.9v-6z"/></svg>';
-const SVG_FIST = '<svg viewBox="0 0 24 24"><rect x="5.5" y="9" width="13" height="8.5" rx="2.4"/><rect x="6.5" y="5.5" width="11" height="4.6" rx="2.2"/></svg>';
+const SVG_HEAD = '<svg viewBox="0 0 24 24"><path d="M12 2.6c-3.9 0-6.7 2.7-6.7 6.3 0 2.6 1.3 4.7 3.2 6l.5 3.3c.1.8.8 1.4 1.6 1.4h2.8c.8 0 1.5-.6 1.6-1.4l.5-3.3c1.9-1.3 3.2-3.4 3.2-6 0-3.6-2.8-6.3-6.7-6.3z"/></svg>';
+const SVG_BODY = '<svg viewBox="0 0 24 24"><path d="M8.6 3 12 4.8 15.4 3l3.5 2.2-1.5 4.4v7.6c0 1.5-1.2 2.8-2.8 2.8H9.4c-1.5 0-2.8-1.2-2.8-2.8V9.6L5.1 5.2 8.6 3z"/></svg>';
+const SVG_FIST = '<svg viewBox="0 0 24 24"><path d="M6.7 8.3h8.9c1.7 0 3.1 1.4 3.1 3.1v3.3c0 2.1-1.7 3.8-3.8 3.8H8.7c-2.1 0-3.8-1.7-3.8-3.8v-4.7c0-.9.8-1.7 1.8-1.7z"/><rect x="7.3" y="5.1" width="8.3" height="3.5" rx="1.75"/></svg>';
 function ikonHit(tech){
   if (tech==='kepala' || tech==='putar_kepala') return SVG_HEAD;
   if (tech==='badan'  || tech==='putar_badan')  return SVG_BODY;
@@ -438,8 +475,7 @@ let lastHitAt=null, hitRound=null, sudahMuatHit=false;
 function renderHits(st){
   // reset ikon tiap ronde baru
   if (st.round !== hitRound){
-    if($('hitIconChung')) $('hitIconChung').innerHTML='';
-    if($('hitIconHong'))  $('hitIconHong').innerHTML='';
+    document.querySelectorAll('.hline').forEach(l => l.innerHTML = '');
     hitRound = st.round;
   }
   if (st.lastHit && st.lastHit.at !== lastHitAt){
@@ -448,25 +484,37 @@ function renderHits(st){
   }
   sudahMuatHit = true;
 }
+function grupHit(tech){
+  if (tech==='kepala' || tech==='putar_kepala') return 'kepala';
+  if (tech==='badan'  || tech==='putar_badan')  return 'badan';
+  return 'pukulan';
+}
 function tambahHit(side, tech){
   const box = side==='chung' ? $('hitIconChung') : $('hitIconHong');
   if(!box) return;
-  const head = (tech==='kepala' || tech==='putar_kepala');
+  const grup = grupHit(tech);
+  const line = box.querySelector('.hline[data-g="' + grup + '"]');
+  if(!line) return;
+  const head = (grup === 'kepala');
+  const spin = String(tech||'').indexOf('putar_') === 0;
   const chip = document.createElement('span');
-  chip.className = 'hchip' + (head ? ' head' : '');
+  chip.className = 'hchip' + (head ? ' head' : '') + (spin ? ' spin' : '');
   chip.innerHTML = ikonHit(tech);
-  box.appendChild(chip);
-  while (box.children.length > 16) box.removeChild(box.firstChild);
+  line.appendChild(chip);
+  while (line.children.length > 18) line.removeChild(line.firstChild);
   if (head) popKepala(side);
 }
 function popKepala(side){
   const panel = side==='chung' ? $('teamChung') : $('teamHong');
   if(!panel) return;
+  const ring = document.createElement('div');
+  ring.className = 'hitRing';
   const pop = document.createElement('div');
   pop.className = 'hitPop';
   pop.innerHTML = SVG_HEAD;
-  panel.appendChild(pop);
-  setTimeout(()=>{ pop.remove(); }, 900);
+  panel.appendChild(ring); panel.appendChild(pop);
+  setTimeout(()=>{ ring.remove(); }, 880);
+  setTimeout(()=>{ pop.remove(); }, 980);
 }
 
 /* ===== status jelas: TIME OUT / KYE-SHI / SIGHAN / JEDA ===== */
@@ -553,7 +601,8 @@ function koneksi(){ onValue(ref(db,".info/connected"), s=>{ const on=s.val()===t
 const esc = t => String(t==null?'':t).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
 let allMatches={}, allResults={}, liveKode=null;
 onValue(ref(db,"live"),    s=>{ liveKode = s.val()||null; renderMenu(); }, ()=>{});
-onValue(ref(db,"matches"), s=>{ allMatches = s.val()||{}; renderMenu(); }, ()=>{});
+onValue(ref(db,"matches"), s=>{ allMatches = s.val()||{}; renderMenu(); resolveHash(); },
+        ()=>{ if(hashTarget) pasang(hashTarget); });   // cadangan bila daftar partai tak boleh dibaca
 onValue(ref(db,"results"), s=>{ allResults = s.val()||{}; renderMenu(); }, ()=>{});
 
 function statusPartai(code){
@@ -595,7 +644,7 @@ function renderMenu(){
       } else {
         ket=`<div class="mpKet">Belum dimulai</div>`;
       }
-      html+=`<div class="mpItem ${cls}"><div class="mpTop">${head}</div>`+
+      html+=`<div class="mpItem ${cls}" data-no="${esc(m.no==null?'':m.no)}"><div class="mpTop">${head}</div>`+
             `<div class="mpVs">${chip('chung',m.chung)}<span class="mpx">vs</span>${chip('hong',m.hong)}</div>`+
             `${ket}</div>`;
     });
@@ -607,6 +656,15 @@ function renderMenu(){
 }
 $('btnMenu').addEventListener('click', ()=>{ renderMenu(); $('menuPanel').classList.add('on'); });
 $('mpClose').addEventListener('click', ()=> $('menuPanel').classList.remove('on'));
+/* klik partai di jadwal → langsung tampilkan halaman live partai tersebut */
+$('mpBody').addEventListener('click', e=>{
+  const it = e.target.closest('.mpItem'); if(!it) return;
+  const no = it.dataset.no; if(!no) return;
+  $('menuPanel').classList.remove('on');
+  hashTarget = String(no).trim().toUpperCase();
+  location.hash = no;      // link tetap memakai nomor partai
+  resolveHash();
+});
 $('menuPanel').addEventListener('click', e=>{ if(e.target===$('menuPanel')) $('menuPanel').classList.remove('on'); });
 </script>
 

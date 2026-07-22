@@ -420,13 +420,14 @@ function pantauKoneksi(){
 /* tombol wasit hanya aktif saat TERSAMBUNG dan waktu sudah di-play/pause operator */
 function perbaruiKunci(){
   const fase = stateWaktu ? stateWaktu.phase : null;
-  const aktif = (fase === 'running' || fase === 'paused');
+  const aktif = (fase === 'running');   // wasit hanya boleh menekan saat waktu BERJALAN
   terkunci = !online || !aktif;
   $('screen').classList.toggle('terkunci', terkunci);
   if (!online) statusDasar = 'Koneksi terputus — menyambung…';
   else if (fase === 'break') statusDasar = 'Jeda resmi — tunggu lanjut';
+  else if (fase === 'paused') statusDasar = 'Waktu dijeda — tunggu lanjut';
   else if (fase === 'over') statusDasar = 'Pertandingan selesai';
-  else if (!aktif) statusDasar = 'Menunggu wasit utama memulai';
+  else if (!aktif) statusDasar = 'Menunggu operator memulai';
   else statusDasar = 'Tekan saat serangan sah';
   const el = $('status');
   if (el && !el.classList.contains('reg') && !el.classList.contains('valid')) el.textContent = statusDasar;
