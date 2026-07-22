@@ -159,6 +159,9 @@
   .mpSec b{color:#fff;margin-left:4px}
   .mpItem{background:#12161d;border:1px solid #232a35;border-radius:10px;padding:10px 12px;cursor:pointer;transition:border-color .15s}
   .mpItem:active{border-color:var(--gold)}
+  .mpItem.kini{border-color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.5) inset}
+  .mpNow{float:right;font-size:9.5px;font-weight:800;color:#0A0C10;background:#fff;
+    padding:2px 8px;border-radius:20px;letter-spacing:.06em}
   .mpItem.sedang{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
   .mpTop{font-size:12px;font-weight:800;letter-spacing:.06em;color:var(--gold);margin-bottom:6px}
   .mpVs{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -374,8 +377,11 @@ $('btnSwitch').addEventListener('click', () => {
 let KODE=null;
 /* URL tamu memakai NOMOR PARTAI (mis. idwt.web.id/#170845), bukan kode pertandingan */
 let hashTarget = decodeURIComponent(location.hash.replace(/^#/,"")).trim().toUpperCase() || null;
+let pilihManual = false;      // penonton memilih partai sendiri lewat menu Jadwal
+let lepasLangganan = [];      // untuk memutus langganan partai sebelumnya
+let sudahKoneksi = false;
 if (!hashTarget)
-  onValue(ref(db,"live"), s=>{ const k=s.val(); if(k&&k!==KODE)pasang(k); else if(!k){KODE=null;$('live').classList.remove('on');$('wait').style.display='flex';} });
+  onValue(ref(db,"live"), s=>{ if(pilihManual) return; const k=s.val(); if(k&&k!==KODE)pasang(k); else if(!k){KODE=null;$('live').classList.remove('on');$('wait').style.display='flex';} });
 /* cocokkan nomor partai pada URL dengan kode pertandingan (dijalankan saat daftar partai tiba) */
 function resolveHash(){
   if(!hashTarget) return;
@@ -394,20 +400,35 @@ let cfg={showNames:true,showImg:true,showCountry:true,showHeader:true,showGamjeo
 let prev={chung:0,hong:0}, prevRem=null, sudahBel=false, pertama=true, cur=null;
 
 function pasang(kode){
-  if(kode===KODE) return;          // hindari langganan ganda saat berpindah partai
+  if(kode===KODE) return;          // sudah menampilkan partai ini
+  lepasLangganan.forEach(f=>{ try{ f(); }catch(e){} });   // putus langganan partai lama
+  lepasLangganan = [];
+  bersihkanTampilan();
   KODE=kode; $('wait').style.display='none'; $('live').classList.add('on');
-  koneksi();
-  onValue(ref(db,`matches/${kode}/meta`), s=>{ if(kode!==KODE) return; renderMeta(s.val()||{}); });
-  onValue(ref(db,`matches/${kode}/config`), s=>{ 
-    if(kode!==KODE) return;
-    cfg=Object.assign(cfg,s.val()||{}); 
-    applyConfig(); 
-    if(cfg.sideSwap !== undefined) {
-      isSwapped = cfg.sideSwap;
-      $('mainGrid').classList.toggle('swapped', isSwapped);
-    }
-  });
-  onValue(ref(db,`matches/${kode}/state`), s=>{ if(kode!==KODE) return; const st=s.val(); if(st) renderState(st); });
+  if(!sudahKoneksi){ koneksi(); sudahKoneksi = true; }
+  lepasLangganan.push(
+    onValue(ref(db,`matches/${kode}/meta`), s=>{ if(kode!==KODE) return; renderMeta(s.val()||{}); }));
+  lepasLangganan.push(
+    onValue(ref(db,`matches/${kode}/config`), s=>{ 
+      if(kode!==KODE) return;
+      cfg=Object.assign(cfg,s.val()||{}); 
+      applyConfig(); 
+      if(cfg.sideSwap !== undefined) {
+        isSwapped = cfg.sideSwap;
+        $('mainGrid').classList.toggle('swapped', isSwapped);
+      }
+    }));
+  lepasLangganan.push(
+    onValue(ref(db,`matches/${kode}/state`), s=>{ if(kode!==KODE) return; const st=s.val(); if(st) renderState(st); }));
+}
+/* hapus sisa tampilan partai sebelumnya agar tidak tercampur */
+function bersihkanTampilan(){
+  cur=null; prevRem=null; sudahBel=false;
+  lastFlashAt=null; sudahMuat=false; matchSuara=false;
+  lastHitAt=null; hitRound=null; sudahMuatHit=false;
+  const rf=$('roundFlash'), mf=$('matchFlash'), b=$('banner');
+  if(rf) rf.className=''; if(mf) mf.className=''; if(b) b.className='banner';
+  document.querySelectorAll('.hline').forEach(l=>l.innerHTML='');
 }
 
 function renderMeta(m){
@@ -616,8 +637,10 @@ function chip(sd, d){
   const ct = d.country ? ` · ${d.country}` : '';
   return `<span class="mpChip ${sd}">${esc(nm)}${esc(ct)}</span>`;
 }
+let daftarMenu = [];
 function renderMenu(){
   const body=$('mpBody'); if(!body) return;
+  daftarMenu = [];
   const codes=Object.keys(allMatches);
   const buckets={sedang:[],akan:[],sudah:[]};
   codes.forEach(c=>{ buckets[statusPartai(c)].push(c); });
@@ -644,7 +667,10 @@ function renderMenu(){
       } else {
         ket=`<div class="mpKet">Belum dimulai</div>`;
       }
-      html+=`<div class="mpItem ${cls}" data-no="${esc(m.no==null?'':m.no)}"><div class="mpTop">${head}</div>`+
+      const idx = daftarMenu.push({ code:c, no:(m.no==null?'':String(m.no)) }) - 1;
+      const kini = (c===KODE);
+      const tanda = kini ? '<span class="mpNow">SEDANG DITAMPILKAN</span>' : '';
+      html+=`<div class="mpItem ${cls}${kini?' kini':''}" data-i="${idx}"><div class="mpTop">${tanda}${head}</div>`+
             `<div class="mpVs">${chip('chung',m.chung)}<span class="mpx">vs</span>${chip('hong',m.hong)}</div>`+
             `${ket}</div>`;
     });
@@ -659,11 +685,19 @@ $('mpClose').addEventListener('click', ()=> $('menuPanel').classList.remove('on'
 /* klik partai di jadwal → langsung tampilkan halaman live partai tersebut */
 $('mpBody').addEventListener('click', e=>{
   const it = e.target.closest('.mpItem'); if(!it) return;
-  const no = it.dataset.no; if(!no) return;
+  const d = daftarMenu[+it.dataset.i]; if(!d) return;
   $('menuPanel').classList.remove('on');
-  hashTarget = String(no).trim().toUpperCase();
-  location.hash = no;      // link tetap memakai nomor partai
-  resolveHash();
+  // memilih partai yang sedang live = kembali mengikuti operator; partai lain = tetap terkunci
+  pilihManual = (d.code !== liveKode);
+  if(d.no){
+    hashTarget = d.no.trim().toUpperCase();
+    location.hash = d.no;                  // link tetap memakai nomor partai
+  }else{
+    hashTarget = null;                     // partai tanpa nomor: jangan taruh kode di URL
+    if(location.hash) history.replaceState(null,'',location.pathname+location.search);
+  }
+  pasang(d.code);
+  renderMenu();
 });
 $('menuPanel').addEventListener('click', e=>{ if(e.target===$('menuPanel')) $('menuPanel').classList.remove('on'); });
 </script>
