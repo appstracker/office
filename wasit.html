@@ -20,7 +20,12 @@
   .hidden{display:none !important}
 
   /* masuk */
-  .gate{flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:24px;max-width:420px;margin:0 auto;width:100%}
+  /* panel masuk melayang di atas konsol (konsol tetap terlihat di belakang) */
+  .gate{position:fixed;inset:0;z-index:150;background:rgba(6,8,12,.94);
+        display:flex;align-items:center;justify-content:center;padding:18px;overflow-y:auto}
+  .gateBox{width:100%;max-width:420px;display:flex;flex-direction:column;gap:13px}
+  .gateClose{background:none;border:1px solid var(--line);color:var(--mut);
+        border-radius:9px;padding:9px;font-size:13px;font-weight:700}
   .gate h1{font-size:22px;font-weight:800}
   .gate p{color:var(--mut);font-size:14px;line-height:1.5}
   label{display:block;font-size:12px;color:var(--mut);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
@@ -132,6 +137,16 @@
   .exit{margin-left:8px;background:none;border:1px solid var(--line);color:var(--mut);
         border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700}
   .exit.hide{display:none}
+  /* wajib mendatar (landscape) */
+  #rotate{position:fixed;inset:0;z-index:300;background:#0A0C10;display:none;
+        flex-direction:column;align-items:center;justify-content:center;gap:15px;text-align:center;padding:26px}
+  @media (orientation:portrait){ body:not(.abaikanPutar) #rotate{display:flex} }
+  #rotate .rotIcon{font-size:54px;animation:rotSpin 2.2s ease-in-out infinite}
+  @keyframes rotSpin{0%,100%{transform:rotate(0)}50%{transform:rotate(-90deg)}}
+  #rotate .rotTxt{font-size:16px;font-weight:800;line-height:1.65}
+  #rotate .rotTxt small{display:block;margin-top:5px;color:var(--mut);font-weight:600;font-size:12px}
+  #rotSkip{margin-top:4px;background:none;border:1px solid var(--line);color:var(--mut);
+        border-radius:8px;padding:8px 15px;font-size:12px;font-weight:700}
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:24px;z-index:20}
   .modal.on{display:flex}
   .modal .box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;max-width:340px;width:100%;text-align:center}
@@ -170,8 +185,17 @@
 
 
   <!-- ===== MASUK ===== -->
-  <div class="gate" id="gate">
-    <h1>Wasit</h1>
+  <!-- ===== WAJIB MENDATAR ===== -->
+  <div id="rotate">
+    <div class="rotIcon">&#128241;</div>
+    <div class="rotTxt">Putar perangkat ke posisi <b>mendatar</b>
+      <small>Konsol wasit dirancang untuk mode landscape</small></div>
+    <button id="rotSkip">Tetap lanjutkan</button>
+  </div>
+
+  <div class="gate hidden" id="gate">
+    <div class="gateBox">
+    <h1>Masuk sebagai Wasit</h1>
     <p>Masukkan kode pertandingan dari operator, lalu pilih nomor kursimu. HP akan bergetar saat kamu menekan Mulai Bertugas &mdash; bila tidak terasa, matikan mode senyap/hening.</p>
     <div>
       <label>Kode Pertandingan</label>
@@ -187,14 +211,17 @@
     </div>
     <div class="err" id="gateErr"></div>
     <button class="primary" id="btnEnter">Mulai Bertugas</button>
+    <button class="gateClose" id="gateClose">Tutup</button>
+    </div>
   </div>
 
   <!-- ===== LAYAR WASIT ===== -->
-  <div class="hidden" id="screen" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div id="screen" style="flex:1;display:flex;flex-direction:column;min-height:0">
     <div class="bar">
       Kode <b id="codeView">—</b> · W<b id="jView">—</b> · R<b id="roundView">–</b> · <b id="clockView">–:––</b>
       <span class="conn"><span class="dot" id="connDot"></span><span id="connText">…</span></span>
-      <button class="exit" id="btnExit">Keluar</button>
+      <button class="exit" id="btnLogin">Masuk</button>
+      <button class="exit hide" id="btnExit">Keluar</button>
     </div>
     <div class="status" id="status">Tekan saat serangan sah</div>
     <div class="pad">
@@ -232,6 +259,16 @@ const LAYOUT = [
 const $ = id => document.getElementById(id);
 let KODE = "", JUDGE = 0;
 
+/* identitas perangkat — dipakai agar slot wasit benar-benar terkunci untuk satu HP */
+const DEVID = (() => {
+  try{
+    let v = localStorage.getItem('wasit_dev');
+    if(!v){ v = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+            localStorage.setItem('wasit_dev', v); }
+    return v;
+  }catch(e){ return 'd' + Math.random().toString(36).slice(2,10); }
+})();
+
 /* pilih nomor wasit */
 let picked = 0;
 $('pick').addEventListener('click', e => {
@@ -259,16 +296,17 @@ async function coba(kode, judge, viaURL){
     ada = snap.exists();
   }catch(e){ $('gateErr').textContent = "Gagal menghubungi server."; return; }
   if (!ada){ $('gateErr').textContent = "Kode tidak ditemukan. Minta kode ke operator."; return; }
-  // satu nomor wasit hanya untuk satu perangkat: tolak bila slot sedang online
-  if (!viaURL){
-    try{
-      const js = await get(ref(db, `matches/${kode}/judges/${judge}`));
-      if (js.exists()){
-        $('gateErr').textContent = `Wasit ${judge} sedang online di perangkat lain. Pilih nomor lain atau tunggu ia keluar.`;
-        return;
-      }
-    }catch(e){ /* bila Rules membatasi baca judges, lewati pemeriksaan */ }
-  }
+  // satu nomor wasit hanya untuk satu perangkat — berlaku juga saat menyambung lewat URL
+  try{
+    const js = await get(ref(db, `matches/${kode}/judges/${judge}`));
+    const d  = js.exists() ? (js.val() || {}) : null;
+    if (d && d.dev && d.dev !== DEVID){
+      const pesan = `Wasit ${judge} sedang online di perangkat lain. Pilih nomor lain atau tunggu ia keluar.`;
+      $('gateErr').textContent = pesan;
+      if (viaURL){ bukaGate(); }        // link dibagikan ke HP lain: tampilkan panel masuk
+      return;
+    }
+  }catch(e){ /* bila Rules membatasi baca judges, lewati pemeriksaan */ }
   KODE = kode; JUDGE = judge;
   location.hash = `${KODE}.${JUDGE}`;   // agar refresh menyambung lagi
   masuk();
@@ -276,7 +314,8 @@ async function coba(kode, judge, viaURL){
 
 function masuk(){
   $('gate').classList.add('hidden');
-  $('screen').classList.remove('hidden');
+  $('btnLogin').classList.add('hide');
+  $('btnExit').classList.remove('hide');
   $('codeView').textContent = KODE;
   $('jView').textContent = JUDGE;
   buatTombol();
@@ -297,7 +336,10 @@ async function autoMasuk(){
 }
 
 /* tombol */
+let tombolSiap = false;
 function buatTombol(){
+  if (tombolSiap) return;      // jangan bangun dua kali
+  tombolSiap = true;
   [['hong','colHong'],['chung','colChung']].forEach(([side,colId]) => {
     const col = $(colId);
     LAYOUT.forEach(t => {
@@ -409,7 +451,10 @@ function renderWaktu(){
 }
 
 let online = false, terkunci = true, statusDasar = 'Tekan saat serangan sah';
+let koneksiSiap = false;
 function pantauKoneksi(){
+  if (koneksiSiap) return;       // cukup satu langganan
+  koneksiSiap = true;
   onValue(ref(db, ".info/connected"), snap => {
     online = snap.val() === true;
     $('connDot').classList.toggle('on', online);
@@ -423,7 +468,8 @@ function perbaruiKunci(){
   const aktif = (fase === 'running');   // wasit hanya boleh menekan saat waktu BERJALAN
   terkunci = !online || !aktif;
   $('screen').classList.toggle('terkunci', terkunci);
-  if (!online) statusDasar = 'Koneksi terputus — menyambung…';
+  if (!KODE) statusDasar = 'Belum masuk — tekan tombol Masuk di kanan atas';
+  else if (!online) statusDasar = 'Koneksi terputus — menyambung…';
   else if (fase === 'break') statusDasar = 'Jeda resmi — tunggu lanjut';
   else if (fase === 'paused') statusDasar = 'Waktu dijeda — tunggu lanjut';
   else if (fase === 'over') statusDasar = 'Pertandingan selesai';
@@ -434,12 +480,19 @@ function perbaruiKunci(){
 }
 
 /* layar penuh: sembunyikan bilah alamat browser (perlu ketukan pengguna) */
+function kunciMendatar(){
+  try{
+    if (screen.orientation && screen.orientation.lock)
+      screen.orientation.lock('landscape').catch(()=>{});
+  }catch(e){}
+}
 function layarPenuh(){
-  if (document.fullscreenElement) return;
+  if (document.fullscreenElement){ kunciMendatar(); return; }
   const el = document.documentElement;
   try{
     const p = (el.requestFullscreen || el.webkitRequestFullscreen)?.call(el);
-    if (p && p.catch) p.catch(()=>{});
+    if (p && p.then) p.then(kunciMendatar).catch(()=>{});
+    else kunciMendatar();
   }catch(e){}
 }
 // jika layar penuh tak sengaja keluar (usap/back), ketukan berikutnya menyalakannya lagi
@@ -458,7 +511,7 @@ if (navigator.getBattery){
 }
 function kirimHadir(){
   const r = ref(db, `matches/${KODE}/judges/${JUDGE}`);
-  const tulis = () => set(r, { t: Date.now(), b: LEVEL_BATERAI }).catch(()=>{});
+  const tulis = () => set(r, { t: Date.now(), b: LEVEL_BATERAI, dev: DEVID }).catch(()=>{});
   tulis();
   try{ onDisconnect(r).remove(); }catch(e){}
   setInterval(tulis, 10000);
@@ -504,6 +557,16 @@ function pasangBack(){
   });
 }
 
+/* panel masuk dibuka dari pojok kanan atas konsol */
+function bukaGate(){ $('gate').classList.remove('hidden'); }
+$('btnLogin').addEventListener('click', () => { layarPenuh(); bukaGate(); });
+$('gateClose').addEventListener('click', () => $('gate').classList.add('hidden'));
+$('rotSkip').addEventListener('click', () => document.body.classList.add('abaikanPutar'));
+
+/* konsol tampil sejak awal (terkunci) — wasit tinggal menekan Masuk */
+buatTombol();
+pantauKoneksi();
+perbaruiKunci();
 autoMasuk();   // sambung ulang otomatis jika ada kode di URL
 </script>
 <div style="position:fixed;left:8px;bottom:6px;font-size:10px;color:#5a6472;letter-spacing:.08em;z-index:5;pointer-events:none">V1 &middot; &copy;SRISP 2026</div>
