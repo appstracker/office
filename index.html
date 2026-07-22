@@ -107,7 +107,7 @@
   .foot .dot.on{background:var(--ok)}
   .foot .brand{margin-left:auto;letter-spacing:.1em}
 
-  .sound{position:fixed;right:12px;top:10px;z-index:41;background:var(--gold);color:#1A1206;border:none;
+  .sound{position:fixed;right:12px;top:10px;z-index:90;background:var(--gold);color:#1A1206;border:none;
          border-radius:22px;padding:10px 16px;font-size:13px;font-weight:800;box-shadow:0 4px 16px rgba(0,0,0,.4)}
   .sound.hide{display:none}
 
@@ -144,11 +144,13 @@
   @keyframes mfBg{0%,100%{filter:brightness(1)}50%{filter:brightness(1.4)}}
 
   /* ==== menu pertandingan ==== */
-  #btnMenu{position:fixed;left:12px;top:10px;z-index:41;background:rgba(255,255,255,.14);
-    color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:22px;padding:8px 15px;
-    font-size:12px;font-weight:800;letter-spacing:.05em;backdrop-filter:blur(4px);cursor:pointer}
-  #btnMenu:hover{background:rgba(255,255,255,.26)}
-  #menuPanel{position:fixed;inset:0;z-index:50;display:none;background:rgba(6,8,12,.93);
+  /* z-index 90: tetap di atas layar pemenang ronde (60) & partai (70) agar selalu bisa diklik */
+  #btnMenu{position:fixed;left:12px;top:10px;z-index:90;background:rgba(0,0,0,.34);
+    color:#fff;border:1px solid rgba(255,255,255,.45);border-radius:22px;padding:8px 15px;
+    font-size:12px;font-weight:800;letter-spacing:.05em;backdrop-filter:blur(5px);cursor:pointer;
+    box-shadow:0 2px 9px rgba(0,0,0,.4)}
+  #btnMenu:hover{background:rgba(0,0,0,.5)}
+  #menuPanel{position:fixed;inset:0;z-index:100;display:none;background:rgba(6,8,12,.93);
     flex-direction:column;padding:14px}
   #menuPanel.on{display:flex}
   #menuPanel .mpHead{display:flex;align-items:center;justify-content:space-between;color:#fff;
