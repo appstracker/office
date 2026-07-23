@@ -21,19 +21,22 @@
 
   /* masuk */
   /* panel masuk melayang di atas konsol (konsol tetap terlihat di belakang) */
-  .gate{position:fixed;inset:0;z-index:150;background:rgba(6,8,12,.94);
-        display:flex;align-items:center;justify-content:center;padding:18px;overflow-y:auto}
-  .gateBox{width:100%;max-width:420px;display:flex;flex-direction:column;gap:13px}
+  /* panel masuk = kartu kecil melayang, bukan halaman penuh */
+  .gate{position:fixed;inset:0;z-index:150;background:rgba(4,6,10,.55);
+        display:flex;align-items:center;justify-content:center;padding:10px}
+  .gateBox{width:min(300px,92vw);max-height:92vh;overflow-y:auto;display:flex;flex-direction:column;gap:9px;
+        background:var(--panel);border:1px solid var(--line);border-radius:14px;
+        padding:14px;box-shadow:0 18px 50px rgba(0,0,0,.65)}
   .gateClose{background:none;border:1px solid var(--line);color:var(--mut);
         border-radius:9px;padding:9px;font-size:13px;font-weight:700}
-  .gate h1{font-size:22px;font-weight:800}
-  .gate p{color:var(--mut);font-size:14px;line-height:1.5}
-  label{display:block;font-size:12px;color:var(--mut);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
-  input{width:100%;padding:14px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:16px;text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+  .gate h1{font-size:15px;font-weight:800}
+  .gate p{color:var(--mut);font-size:11px;line-height:1.45}
+  label{display:block;font-size:10px;color:var(--mut);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+  input{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:16px;text-transform:uppercase;letter-spacing:.1em;font-weight:700}
   .pick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-  .pick button{padding:16px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font-size:16px;font-weight:800}
+  .pick button{padding:11px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font-size:16px;font-weight:800}
   .pick button.on{background:var(--gold);color:#1A1206;border-color:var(--gold)}
-  .primary{width:100%;padding:15px;border:none;border-radius:10px;background:var(--ok);color:#08130C;font-size:16px;font-weight:800;margin-top:6px}
+  .primary{width:100%;padding:12px;border:none;border-radius:10px;background:var(--ok);color:#08130C;font-size:16px;font-weight:800;margin-top:6px}
   .err{color:var(--hong);font-size:13px;min-height:18px}
 
   /* layar wasit */
@@ -140,7 +143,13 @@
   /* wajib mendatar (landscape) */
   #rotate{position:fixed;inset:0;z-index:300;background:#0A0C10;display:none;
         flex-direction:column;align-items:center;justify-content:center;gap:15px;text-align:center;padding:26px}
-  @media (orientation:portrait){ body:not(.abaikanPutar) #rotate{display:flex} }
+  #rotate{display:none !important}   /* tidak dipakai lagi: layar diputar sendiri */
+  /* HP dipegang mendatar tapi rotasi layar terkunci? tampilan tetap mendatar. */
+  @media (orientation:portrait){
+    html,body{overflow:hidden}
+    body{position:fixed;top:0;left:0;width:100vh;height:100vw;
+         transform-origin:0 0;transform:translateX(100vw) rotate(90deg)}
+  }
   #rotate .rotIcon{font-size:54px;animation:rotSpin 2.2s ease-in-out infinite}
   @keyframes rotSpin{0%,100%{transform:rotate(0)}50%{transform:rotate(-90deg)}}
   #rotate .rotTxt{font-size:16px;font-weight:800;line-height:1.65}
@@ -196,10 +205,15 @@
   <div class="gate hidden" id="gate">
     <div class="gateBox">
     <h1>Masuk sebagai Wasit</h1>
-    <p>Masukkan kode pertandingan dari operator, lalu pilih nomor kursimu. HP akan bergetar saat kamu menekan Mulai Bertugas &mdash; bila tidak terasa, matikan mode senyap/hening.</p>
+    <p>HP akan bergetar saat menekan Mulai Bertugas. Bila tidak terasa, matikan mode senyap.</p>
+    <div id="loginFields">
+      <label>Password Wasit</label>
+      <input id="passInput" type="password" placeholder="Password" autocomplete="current-password"
+             style="text-transform:none;letter-spacing:normal">
+    </div>
     <div>
       <label>Kode Pertandingan</label>
-      <input id="codeInput" type="text" placeholder="Masukkan kode dari operator" autocomplete="off">
+      <input id="codeInput" type="text" placeholder="Kode dari operator" autocomplete="off">
     </div>
     <div>
       <label>Nomor Wasit</label>
@@ -240,9 +254,12 @@
   </div>
 
 <script type="module">
-import { db } from "./firebase-config.js";
+import { db, auth } from "./firebase-config.js";
 import { ref, push, set, onDisconnect, onValue, get, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/12.16.0/firebase-database.js";
+import { signInWithEmailAndPassword, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+const EMAIL_WASIT = "wasit@idwt.web.id";   // email tetap; wasit cukup password (sekali per perangkat)
 
 /* ===== PENGATURAN TOMBOL (+) — mudah diubah ===== */
 const PLUS_AKTIF_MS = 3000;                 // lama tombol + menyala setelah tekan 2/3 (ms)
@@ -277,7 +294,7 @@ const DEVID = (() => {
 /* pilih nomor wasit */
 let picked = 0;
 $('pick').addEventListener('click', e => {
-  const b = e.target.closest('button'); if (!b) return;
+  const b = e.target.closest('button'); if (!b || b.disabled) return;
   picked = Number(b.dataset.j);
   [...$('pick').children].forEach(x => x.classList.toggle('on', x===b));
 });
@@ -294,6 +311,15 @@ $('btnEnter').addEventListener('click', async () => {
 
 // cek pertandingan benar-benar ada (dibuat operator) sebelum masuk
 async function coba(kode, judge, viaURL){
+  // wajib login dulu (sekali per perangkat) — sesudah itu cukup kode
+  if (!auth.currentUser){
+    const pass = ($('passInput') && $('passInput').value) || "";
+    if (!pass){ $('gateErr').textContent = "Masukkan password wasit."; bukaGate(); return; }
+    $('gateErr').textContent = "Masuk…";
+    try{ await signInWithEmailAndPassword(auth, EMAIL_WASIT, pass); }
+    catch(e){ $('gateErr').textContent = "Password salah."; bukaGate(); return; }
+    $('passInput').value = "";
+  }
   $('gateErr').textContent = "Memeriksa kode…";
   let ada = false;
   try{
@@ -301,6 +327,19 @@ async function coba(kode, judge, viaURL){
     ada = snap.exists();
   }catch(e){ $('gateErr').textContent = "Gagal menghubungi server."; return; }
   if (!ada){ $('gateErr').textContent = "Kode tidak ditemukan. Minta kode ke operator."; return; }
+  // kursi wasit dibatasi setelan partai (operator: panel Rule -> Jumlah wasit bertugas)
+  let batas = 3;
+  try{
+    const cs = await get(ref(db, `matches/${kode}/config`));
+    const c  = cs.val();
+    if (c && c.jumlahWasit >= 1 && c.jumlahWasit <= 3) batas = c.jumlahWasit;
+  }catch(e){ /* bila gagal dibaca, jangan halangi wasit bertugas */ }
+  terapkanBatas(batas);
+  if (judge > batas){
+    $('gateErr').textContent = `Partai ini hanya memakai ${batas} wasit. Pilih nomor 1${batas>1?'\u2013'+batas:''}.`;
+    if (viaURL){ bukaGate(); }
+    return;
+  }
   // satu nomor wasit hanya untuk satu perangkat — berlaku juga saat menyambung lewat URL
   try{
     const js = await get(ref(db, `matches/${kode}/judges/${judge}`));
@@ -333,10 +372,14 @@ function masuk(){
 }
 
 // coba masuk otomatis dari URL saat refresh: #KODE.NOMOR
+const authSiap = new Promise(res => {
+  const lepas = onAuthStateChanged(auth, u => { try{ lepas(); }catch(e){} res(u); });
+});
 async function autoMasuk(){
   const h = decodeURIComponent(location.hash.replace(/^#/, ""));
   const m = h.match(/^(.+)\.([123])$/);
   if (!m) return;
+  await authSiap;                                       // tunggu sesi tersimpan dipulihkan
   await coba(m[1].toUpperCase(), Number(m[2]), true);   // reconnect dari URL: lewati kunci slot
 }
 
@@ -577,10 +620,36 @@ function pasangBack(){
   });
 }
 
+/* matikan tombol nomor wasit yang tidak dipakai partai ini */
+function terapkanBatas(batas){
+  document.querySelectorAll('#pick button').forEach(b => {
+    const n = Number(b.dataset.j);
+    const boleh = n <= batas;
+    b.disabled = !boleh;
+    b.style.opacity = boleh ? '' : '.3';
+    b.title = boleh ? '' : 'Tidak dipakai pada partai ini';
+    if (!boleh){ b.classList.remove('on'); if (picked === n) picked = 0; }
+  });
+}
+
+/* perangkat yang sudah pernah login tidak diminta password lagi */
+onAuthStateChanged(auth, u => {
+  const lf = $('loginFields');
+  if (lf) lf.style.display = u ? "none" : "";
+});
+
 /* panel masuk dibuka dari pojok kanan atas konsol */
 function bukaGate(){ $('gate').classList.remove('hidden'); }
 $('btnLogin').addEventListener('click', () => { layarPenuh(); bukaGate(); });
 $('gateClose').addEventListener('click', () => $('gate').classList.add('hidden'));
+$('codeInput').addEventListener('change', async () => {
+  const k = $('codeInput').value.trim().toUpperCase(); if (!k) return;
+  try{
+    const cs = await get(ref(db, `matches/${k}/config`));
+    const c  = cs.val();
+    terapkanBatas(c && c.jumlahWasit >= 1 && c.jumlahWasit <= 3 ? c.jumlahWasit : 3);
+  }catch(e){}
+});
 $('rotSkip').addEventListener('click', () => document.body.classList.add('abaikanPutar'));
 
 /* konsol tampil sejak awal (terkunci) — wasit tinggal menekan Masuk */

@@ -393,7 +393,7 @@
       <div class="rfield"><span>Durasi ronde (detik)</span><input id="inpRonde" type="number" min="10"></div>
       <div class="rfield"><span>Time out / Kye-shi (detik)</span><input id="inpRehat" type="number" min="10"></div>
       <div class="rfield"><span>Point Gap (selisih akhir)</span><input id="inpSelisih" type="number" min="1"></div>
-      <div class="rfield"><span>Wasit minimal (2-dari-3)</span><input id="inpWasit" type="number" min="1" max="3"></div>
+      <div class="rfield"><span>Jumlah wasit bertugas</span><input id="inpWasit" type="number" min="1" max="3"></div>
       <div class="btns">
         <button class="no" id="ruleTutup">Tutup</button>
         <button class="yes" id="ruleSave" style="background:var(--ok);color:#08130C">Simpan</button>
@@ -414,7 +414,9 @@ const TEKNIK = {
   pukulan:1, badan:2, kepala:3, putar_badan:4, putar_kepala:5,
   plus_badan:2, plus_kepala:2   // konfirmasi (+) dari stik wasit — peraturan terbaru: ubah plus_kepala jadi 3 (putar ke kepala +3)
 };
-let JENDELA_MS = 1000, JENDELA_PLUS_MS = 3500, WASIT_MINIMAL = 2;   // (+) : stik menyala 3 dtk, beri kelonggaran kirim
+let JENDELA_MS = 1000, JENDELA_PLUS_MS = 3500, WASIT_MINIMAL = 2;
+let JUMLAH_WASIT = 3;                               // berapa kursi wasit dipakai partai ini
+const ambangSah = n => (n <= 1 ? 1 : 2);            // WT: 3 wasit->2, 2 wasit->2, 1 wasit->1   // (+) : stik menyala 3 dtk, beri kelonggaran kirim
 const USIA_PRESS_MS = 5000;    // kiriman wasit lebih tua dari ini dianggap basi
 const UMUR_PENDING  = 8000;    // sisa pencetan yang tak pernah cocok dibuang setelah ini
 let RONDE_DETIK = 120, REHAT_DETIK = 60, SELISIH_STOP = 12;
@@ -487,6 +489,7 @@ function masukKonsol(){
   $('gate').classList.add('hidden');
   $('console').classList.remove('hidden');
   $('codeView').textContent = KODE;
+  bacaConfig();                 // pulihkan setelan partai ini (jumlah wasit, durasi, dsb.)
   aturLive();                   // hanya ambil saluran LIVE bila kosong / memang milik partai ini
   mulaiDengar = now();
   remove(ref(db, `matches/${KODE}/presses`)).catch(()=>{});   // buang sisa pencetan partai sebelumnya
@@ -526,6 +529,8 @@ function prosesPencet(key, p, t){
   const buang = k => remove(ref(db, `matches/${KODE}/presses/${k}`)).catch(()=>{});
   // kiriman basi (mis. sisa di database saat operator refresh) tidak boleh jadi poin
   if (now() - t > USIA_PRESS_MS){ buang(key); return; }
+  // kursi di luar jumlah wasit bertugas tidak boleh mencetak, walau berhasil masuk lewat cara lain
+  if (!(Number(p.judge) >= 1 && Number(p.judge) <= JUMLAH_WASIT)){ buang(key); return; }
   // poin wasit hanya dihitung saat waktu BERJALAN; tekanan saat jeda/stop/istirahat diabaikan
   if (S.phase !== 'running'){ buang(key); return; }
   pending.push({ key, judge:p.judge, side:p.side, tech:p.tech, t, recv:Date.now() });
@@ -902,7 +907,7 @@ $('btnReverse').addEventListener('click', () => { terbalik = !terbalik; document
 /* ====== panel Rule (pengaturan) ====== */
 $('btnRule').addEventListener('click', () => {
   $('inpRonde').value = RONDE_DETIK; $('inpRehat').value = REHAT_DETIK;
-  $('inpSelisih').value = SELISIH_STOP; $('inpWasit').value = WASIT_MINIMAL;
+  $('inpSelisih').value = SELISIH_STOP; $('inpWasit').value = JUMLAH_WASIT;
   $('modalRule').classList.add('on');
 });
 $('ruleTutup').addEventListener('click', () => $('modalRule').classList.remove('on'));
@@ -912,9 +917,10 @@ $('ruleSave').addEventListener('click', () => {
   if (rd > 0) RONDE_DETIK = rd;
   if (rh > 0) REHAT_DETIK = rh;
   if (sg > 0) SELISIH_STOP = sg;
-  if (wm >= 1 && wm <= 3) WASIT_MINIMAL = wm;
+  if (wm >= 1 && wm <= 3){ JUMLAH_WASIT = wm; WASIT_MINIMAL = ambangSah(wm); }
   if (S.phase === "ready"){ S.remaining = RONDE_DETIK; writeState(); }
-  $('modalRule').classList.remove('on'); render();
+  tulisConfig();                       // siarkan agar halaman wasit ikut terbatasi
+  $('modalRule').classList.remove('on'); render(); renderWasit();
 });
 
 /* ====== kehadiran wasit 1-2-3 (butuh izin node judges di Rules) ====== */
@@ -932,12 +938,37 @@ function dengarWasit(){
 function renderWasit(){
   for (let n=1; n<=3; n++){
     const el = $('jw'+n); if (!el) continue;
+    const dipakai = n <= JUMLAH_WASIT;
+    el.style.opacity = dipakai ? '' : '.28';        // kursi tak terpakai diredupkan
+    el.title = dipakai ? '' : 'Tidak dipakai pada partai ini';
     const d = dataWasit[n];
-    const hidup = !!d;   // node ada = wasit online (onDisconnect menghapusnya saat terputus)
+    const hidup = dipakai && !!d;   // node ada = wasit online (onDisconnect menghapusnya saat terputus)
     el.classList.toggle('on', !!hidup);
     const b = el.querySelector('b');
-    if (b) b.textContent = hidup ? (d.b != null ? d.b + '%' : 'OK') : '\u2014';
+    if (b) b.textContent = !dipakai ? '\u2013' : (hidup ? (d.b != null ? d.b + '%' : 'OK') : '\u2014');
   }
+}
+
+/* ====== setelan partai (matches/KODE/config) — dibagi ke halaman wasit ====== */
+function tulisConfig(){
+  set(ref(db, `matches/${KODE}/config`), {
+    jumlahWasit: JUMLAH_WASIT, ronde: RONDE_DETIK, rehat: REHAT_DETIK, selisih: SELISIH_STOP
+  }).catch(e => galat('Setelan partai gagal disimpan (' + ((e && e.code) || e) + '). '
+                    + 'Halaman wasit tidak akan ikut terbatasi. Cek izin tulis node "config" di Rules.'));
+}
+async function bacaConfig(){
+  try{
+    const snap = await get(ref(db, `matches/${KODE}/config`));
+    const c = snap.val();
+    if (!c){ tulisConfig(); return; }              // partai lama: tulis setelan bawaan sekali
+    if (c.jumlahWasit >= 1 && c.jumlahWasit <= 3){
+      JUMLAH_WASIT = c.jumlahWasit; WASIT_MINIMAL = ambangSah(JUMLAH_WASIT);
+    }
+    if (c.ronde   > 0) RONDE_DETIK  = c.ronde;
+    if (c.rehat   > 0) REHAT_DETIK  = c.rehat;
+    if (c.selisih > 0) SELISIH_STOP = c.selisih;
+    renderWasit();
+  }catch(e){ /* biarkan setelan bawaan bila gagal dibaca */ }
 }
 
 /* ====== nama, bendera/foto & kategori dari setup (matches/KODE/meta) ====== */
