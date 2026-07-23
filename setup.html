@@ -119,7 +119,7 @@
       <h2>Pertandingan</h2>
       <div class="lblrow"><label>Kode Pertandingan</label><span class="warn">&#9888;&#65039; Rahasia: hanya operator &amp; wasit &mdash; jangan disebar. Partai baru = kode baru.</span></div>
       <div class="code-row">
-        <input id="kode" placeholder="TKD-1234">
+        <input id="kode" placeholder="Tekan Acak, atau ketik kode partai lama">
         <button class="ghost" id="btnGen">Acak</button>
       </div>
       <div class="two">
@@ -199,7 +199,17 @@ $('pass') && $('pass').addEventListener('keydown', e => { if (e.key==='Enter') $
 onAuthStateChanged(auth, u => { if (u){ $('loginFields').style.display = "none"; } });
 
 /* kode acak */
-function acak(){ $('kode').value = `TKD-${Math.floor(1000+Math.random()*9000)}`; }
+const HURUF_KODE = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // tanpa I O 0 1 agar tak salah baca
+function acak(){
+  const a = new Uint32Array(8);
+  (window.crypto || window.msCrypto).getRandomValues(a);
+  let k = '';
+  for (let i = 0; i < 8; i++){
+    if (i === 4) k += '-';                       // dikelompokkan agar mudah dibacakan
+    k += HURUF_KODE[a[i] % HURUF_KODE.length];
+  }
+  $('kode').value = k;                           // tanpa awalan tetap: pola kode tidak bisa ditebak
+}
 $('btnGen').addEventListener('click', acak);
 // TIDAK diacak otomatis: kolom dibiarkan kosong supaya partai lama bisa diedit
 // dengan mengetik kodenya, tanpa tak sengaja membuat partai kembar.
