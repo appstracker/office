@@ -259,6 +259,11 @@ const LAYOUT = [
 const $ = id => document.getElementById(id);
 let KODE = "", JUDGE = 0;
 
+/* waktu SERVER: jam HP wasit sering meleset dari jam operator */
+let sOffset = 0;
+onValue(ref(db, ".info/serverTimeOffset"), s => { sOffset = s.val() || 0; }, () => {});
+const now = () => Date.now() + sOffset;
+
 /* identitas perangkat — dipakai agar slot wasit benar-benar terkunci untuk satu HP */
 const DEVID = (() => {
   try{
@@ -416,10 +421,15 @@ function statusFlash(teks, cls){
 }
 
 /* getar dobel saat operator sahkan poin (tanpa angka) */
-let lastValidSeen = 0;
+let lastValidSeen = 0, validSiap = false, waktuSiap = false, hadirSiap = false;
+let sudahMuatValid = false;
 function dengarValid(){
+  if (validSiap) return;            // cukup satu langganan
+  validSiap = true;
   onValue(ref(db, `matches/${KODE}/state/lastValid`), snap => {
     const v = snap.val() || 0;
+    // snapshot pertama = poin lama, jangan digetarkan ke wasit yang baru masuk
+    if (!sudahMuatValid){ sudahMuatValid = true; lastValidSeen = v; return; }
     if (v && v !== lastValidSeen){
       lastValidSeen = v;
       getar([70,60,70]);
@@ -432,6 +442,8 @@ function dengarValid(){
 function fmt(s){ const m=Math.floor(s/60); return `${m}:${String(s%60).padStart(2,'0')}`; }
 let stateWaktu = null;
 function dengarWaktu(){
+  if (waktuSiap) return;            // cukup satu langganan
+  waktuSiap = true;
   onValue(ref(db, `matches/${KODE}/state`), snap => {
     stateWaktu = snap.val() || null;
     if (stateWaktu) $('roundView').textContent = stateWaktu.round || 1;
@@ -445,7 +457,7 @@ function dengarWaktu(){
 function renderWaktu(){
   if (!stateWaktu){ $('clockView').textContent = "–:––"; return; }
   let s;
-  if (stateWaktu.phase === "running") s = Math.max(0, Math.round((stateWaktu.endAt - Date.now())/1000));
+  if (stateWaktu.phase === "running") s = Math.max(0, Math.round((stateWaktu.endAt - now())/1000));
   else s = stateWaktu.remaining ?? 0;
   $('clockView').textContent = fmt(s);
 }
@@ -510,6 +522,8 @@ if (navigator.getBattery){
   }).catch(()=>{});
 }
 function kirimHadir(){
+  if (hadirSiap) return;            // cukup satu pengirim denyut
+  hadirSiap = true;
   const r = ref(db, `matches/${KODE}/judges/${JUDGE}`);
   const tulis = () => set(r, { t: Date.now(), b: LEVEL_BATERAI, dev: DEVID })
     .then(() => sembunyiGalat())        // berhasil lagi → pesan galat ditutup

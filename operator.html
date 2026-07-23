@@ -414,18 +414,31 @@ const TEKNIK = {
   pukulan:1, badan:2, kepala:3, putar_badan:4, putar_kepala:5,
   plus_badan:2, plus_kepala:2   // konfirmasi (+) dari stik wasit — peraturan terbaru: ubah plus_kepala jadi 3 (putar ke kepala +3)
 };
-let JENDELA_MS = 1000, JENDELA_PLUS_MS = 2000, WASIT_MINIMAL = 2;
+let JENDELA_MS = 1000, JENDELA_PLUS_MS = 3500, WASIT_MINIMAL = 2;   // (+) : stik menyala 3 dtk, beri kelonggaran kirim
+const USIA_PRESS_MS = 5000;    // kiriman wasit lebih tua dari ini dianggap basi
+const UMUR_PENDING  = 8000;    // sisa pencetan yang tak pernah cocok dibuang setelah ini
 let RONDE_DETIK = 120, REHAT_DETIK = 60, SELISIH_STOP = 12;
 
 const $ = id => document.getElementById(id);
 let KODE = "", base = null;
+
+/* ====== waktu SERVER (agar jam operator/wasit/papan tamu seragam) ====== */
+let sOffset = 0;
+onValue(ref(db, ".info/serverTimeOffset"), s => { sOffset = s.val() || 0; }, () => {});
+const now = () => Date.now() + sOffset;
+/* identitas konsol ini — untuk mendeteksi operator kedua di kode yang sama */
+const DEVID_OP = (() => {
+  try{ let v = localStorage.getItem('op_dev');
+       if(!v){ v='o'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); localStorage.setItem('op_dev',v); }
+       return v; }catch(e){ return 'o'+Math.random().toString(36).slice(2,10); }
+})();
 
 /* ====== state pertandingan (operator satu-satunya penulis) ====== */
 let S = { chung:0, hong:0, round:1, phase:"ready", remaining:RONDE_DETIK, endAt:0, lastValid:0,
           gamjeomChung:0, gamjeomHong:0, hitsChung:0, hitsHong:0, wonChung:0, wonHong:0,
           matchOver:false, winner:null, winType:null, lastRound:null, lastHit:null };
 
-function writeState(){ set(ref(db, `matches/${KODE}/state`), S); }
+function writeState(){ S.by = DEVID_OP; set(ref(db, `matches/${KODE}/state`), S); }
 
 /* ====== gerbang ====== */
 const EMAIL_OPERATOR = "operator@idwt.web.id";   // email tetap; operator cukup password
@@ -474,10 +487,13 @@ function masukKonsol(){
   $('gate').classList.add('hidden');
   $('console').classList.remove('hidden');
   $('codeView').textContent = KODE;
-  set(ref(db, "live"), KODE);   // jadikan pertandingan ini yang tayang di idwt.web.id
+  aturLive();                   // hanya ambil saluran LIVE bila kosong / memang milik partai ini
+  mulaiDengar = now();
+  remove(ref(db, `matches/${KODE}/presses`)).catch(()=>{});   // buang sisa pencetan partai sebelumnya
   render(); tickClock();
   pantauKoneksi();
   dengarPencet();
+  dengarOperatorLain();
   dengarWasit();
   dengarMeta();
   pasangBack();
@@ -495,23 +511,29 @@ function pantauKoneksi(){
 
 /* ====== LOGIKA 2-DARI-3: operator dengar kiriman wasit ====== */
 let pending = [];          // {key, judge, side, tech, t, recv}
-const mulaiDengar = Date.now();
+let mulaiDengar = Date.now();
 
 function dengarPencet(){
   onChildAdded(ref(db, `matches/${KODE}/presses`), snap => {
     const key = snap.key, p = snap.val() || {};
     // abaikan kiriman lama saat operator baru masuk
     const t = typeof p.t === "number" ? p.t : Date.now();
-    if (Date.now() - mulaiDengar < 1500 && Date.now() - t > 3000){ remove(ref(db, `matches/${KODE}/presses/${key}`)); return; }
     prosesPencet(key, p, t);
   });
 }
 
 function prosesPencet(key, p, t){
+  const buang = k => remove(ref(db, `matches/${KODE}/presses/${k}`)).catch(()=>{});
+  // kiriman basi (mis. sisa di database saat operator refresh) tidak boleh jadi poin
+  if (now() - t > USIA_PRESS_MS){ buang(key); return; }
   // poin wasit hanya dihitung saat waktu BERJALAN; tekanan saat jeda/stop/istirahat diabaikan
-  if (S.phase !== 'running'){ remove(ref(db, `matches/${KODE}/presses/${key}`)); return; }
+  if (S.phase !== 'running'){ buang(key); return; }
   pending.push({ key, judge:p.judge, side:p.side, tech:p.tech, t, recv:Date.now() });
-  pending = pending.filter(x => Date.now() - x.recv <= Math.max(JENDELA_MS, JENDELA_PLUS_MS)*3);
+  pending = pending.filter(x => {
+    if (Date.now() - x.recv <= UMUR_PENDING) return true;
+    buang(x.key);        // tak pernah mencapai 2-dari-3 → jangan mengendap di database
+    return false;
+  });
 
   // konfirmasi (+) diberi jendela cocok lebih longgar (tiap wasit punya 3 dtk untuk menekannya)
   const jendela = String(p.tech).startsWith('plus_') ? JENDELA_PLUS_MS : JENDELA_MS;
@@ -525,6 +547,7 @@ function prosesPencet(key, p, t){
     if (!String(p.tech).startsWith('plus_')){
       if (p.side === "chung") S.hitsChung = (S.hitsChung||0)+1; else S.hitsHong = (S.hitsHong||0)+1;
       tambahAtk(p.side);
+      rollbackBerikut = { hitSide: p.side, ronde: S.round };   // agar Undo ikut mengembalikan hits & Attack
     }
     beriPoin(p.side, pts, p.tech);
     // buang kiriman yang sudah dipakai supaya tidak dihitung ulang
@@ -539,13 +562,15 @@ function prosesPencet(key, p, t){
 
 /* ====== poin & skor ====== */
 let riwayat = [];
+let rollbackBerikut = null;   // diisi pemanggil: hal lain yang ikut dibatalkan saat Undo
 function beriPoin(side, pts, detail){
   if (S.phase === "over") return;
   S[side] = Math.max(0, S[side] + pts);
   if (detail && !String(detail).startsWith('plus_') && detail !== 'gamjeom' && detail !== 'batal'){
     S.lastHit = { side, tech: detail, at: Date.now() };   // untuk ikon pukulan di papan tamu
   }
-  riwayat.push({ side, pts });
+  riwayat.push({ side, pts, x: rollbackBerikut });
+  rollbackBerikut = null;
   catatLog(side, pts, detail);
   cekSelisih();
   writeState(); render(); flash(side);
@@ -605,6 +630,7 @@ function gamjeom(offender){
   else S.gamjeomHong = (S.gamjeomHong||0)+1;
   tambahGj(offender);
   const total = offender === 'chung' ? S.gamjeomChung : S.gamjeomHong;
+  rollbackBerikut = { gjSide: offender, ronde: rondeAwal };   // agar Undo ikut mengurangi gam-jeom
   beriPoin(other, 1, 'gamjeom');   // gam-jeom = +1 untuk lawan
   if (total >= GAMJEOM_MAKS && S.phase !== 'over' && S.round === rondeAwal
       && (S.gamjeomChung >= GAMJEOM_MAKS || S.gamjeomHong >= GAMJEOM_MAKS)){
@@ -618,6 +644,19 @@ $('gjHong').addEventListener('click',  () => gamjeom('hong'));
 $('btnUndo').addEventListener('click', () => {
   const last = riwayat.pop(); if (!last) return;
   S[last.side] = Math.max(0, S[last.side] - last.pts);
+  const x = last.x || null;
+  if (x && x.gjSide){                       // batalkan juga hitungan gam-jeom (cegah PUN palsu)
+    const k  = x.gjSide === 'chung' ? 'gamjeomChung' : 'gamjeomHong';
+    const sk = (x.gjSide === 'chung' ? 'gjC' : 'gjH') + Math.min(x.ronde || S.round, 3);
+    S[k]  = Math.max(0, (S[k]||0)  - 1);
+    S[sk] = Math.max(0, (S[sk]||0) - 1);
+  }
+  if (x && x.hitSide){                      // batalkan juga hits & Attack per ronde
+    const k  = x.hitSide === 'chung' ? 'hitsChung' : 'hitsHong';
+    const ak = (x.hitSide === 'chung' ? 'atkC' : 'atkH') + Math.min(x.ronde || S.round, 3);
+    S[k]  = Math.max(0, (S[k]||0)  - 1);
+    S[ak] = Math.max(0, (S[ak]||0) - 1);
+  }
   catatLog(last.side, -last.pts, 'batal');
   writeState(); render();
 });
@@ -636,8 +675,8 @@ $('btnReset').addEventListener('click', () => {
 /* ====== timer ====== */
 let clockTick = null;
 function sisaDetik(){
-  if (S.phase === "break")   return Math.max(0, Math.round(((S.breakEnd||0) - Date.now())/1000));
-  if (S.phase === "running") return Math.max(0, Math.round((S.endAt - Date.now())/1000));
+  if (S.phase === "break")   return Math.max(0, Math.round(((S.breakEnd||0) - now())/1000));
+  if (S.phase === "running") return Math.max(0, Math.round((S.endAt - now())/1000));
   return S.remaining;
 }
 function tickClock(){
@@ -664,7 +703,7 @@ $('btnStart').addEventListener('click', () => {
   } else {
     if (S.remaining <= 0) S.remaining = RONDE_DETIK;
     S.breakEnd = 0;
-    S.endAt = Date.now() + S.remaining*1000; S.phase = "running";
+    S.endAt = now() + S.remaining*1000; S.phase = "running";
   }
   writeState(); render();
 });
@@ -843,7 +882,7 @@ function mulaiBreak(label, dur){
   if (S.phase === "over") return;
   hentikanClock();
   S.phase = "break"; S.breakLabel = label;
-  S.breakEnd = Date.now() + (dur || REHAT_DETIK)*1000;
+  S.breakEnd = now() + (dur || REHAT_DETIK)*1000;
   writeState(); render();
 }
 $('btnTimeout').addEventListener('click', () => mulaiBreak('TIME OUT'));
@@ -1084,6 +1123,54 @@ document.addEventListener('keydown', e => {
 function pasangBack(){
   history.pushState({ op:true }, "");
   window.addEventListener('popstate', () => { history.pushState({ op:true }, ""); mintaKeluar(); });
+}
+
+/* ====== PATCH v2: saluran LIVE & deteksi operator kedua (aditif) ====== */
+async function aturLive(){
+  try{
+    const snap = await get(ref(db, "live"));
+    const k = snap.val();
+    if (!k || k === KODE){ set(ref(db, "live"), KODE).catch(()=>{}); return; }
+    tawarkanLive(k);                       // partai lain sedang tayang: JANGAN rebut diam-diam
+  }catch(e){ /* bila Rules melarang baca live, biarkan saluran apa adanya */ }
+}
+let _kotakLive = null;
+function tawarkanLive(kodeLain){
+  try{
+    if (_kotakLive) return;
+    _kotakLive = document.createElement('div');
+    _kotakLive.style.cssText =
+      'position:fixed;left:8px;right:8px;bottom:70px;z-index:99997;max-width:640px;margin:0 auto;'+
+      'background:#3A2E08;border:1px solid #F5B325;color:#FFF3D6;border-radius:10px;'+
+      'padding:10px 12px;font:600 12px/1.45 system-ui,-apple-system,sans-serif;'+
+      'box-shadow:0 8px 24px rgba(0,0,0,.5);display:flex;gap:10px;align-items:center';
+    const t = document.createElement('div');
+    t.style.cssText = 'flex:1';
+    t.textContent = 'Papan penonton sedang menayangkan partai lain ('+kodeLain+'). '
+                  + 'Partai ini tetap bisa dijalankan, tapi belum tampil di layar penonton.';
+    const b = document.createElement('button');
+    b.textContent = 'Tayangkan';
+    b.style.cssText = 'background:#F5B325;color:#1A1206;border:0;border-radius:8px;'+
+      'padding:8px 12px;font-weight:800;cursor:pointer;flex:0 0 auto';
+    b.onclick = () => { set(ref(db, "live"), KODE).catch(()=>{}); tutupLive(); };
+    const x = document.createElement('button');
+    x.textContent = '\u00d7';
+    x.style.cssText = 'background:none;border:0;color:#FFE9C0;font-size:20px;line-height:1;cursor:pointer;flex:0 0 auto';
+    x.onclick = tutupLive;
+    _kotakLive.appendChild(t); _kotakLive.appendChild(b); _kotakLive.appendChild(x);
+    document.body.appendChild(_kotakLive);
+  }catch(e){}
+}
+function tutupLive(){ if (_kotakLive){ _kotakLive.remove(); _kotakLive = null; } }
+
+/* peringatan bila ada konsol operator KEDUA di kode partai yang sama */
+function dengarOperatorLain(){
+  onValue(ref(db, `matches/${KODE}/state`), snap => {
+    const st = snap.val();
+    if (!st || !st.by || st.by === DEVID_OP) return;
+    galat('PERINGATAN: ada konsol operator LAIN yang aktif di kode ' + KODE + '. '
+        + 'Dua konsol akan saling menimpa skor. Tutup salah satunya sekarang.');
+  }, () => {});
 }
 
 /* ====== PATCH DIAGNOSTIK v1 (aditif — tidak mengubah logika lama) ======

@@ -200,7 +200,9 @@ onAuthStateChanged(auth, u => { if (u){ $('loginFields').style.display = "none";
 
 /* kode acak */
 function acak(){ $('kode').value = `TKD-${Math.floor(1000+Math.random()*9000)}`; }
-$('btnGen').addEventListener('click', acak); acak();
+$('btnGen').addEventListener('click', acak);
+// TIDAK diacak otomatis: kolom dibiarkan kosong supaya partai lama bisa diedit
+// dengan mengetik kodenya, tanpa tak sengaja membuat partai kembar.
 
 /* mode bendera/foto + pratinjau */
 function flagUrl(code){ return code && code.length===2 ? `https://flagcdn.com/w160/${code.toLowerCase()}.png` : ""; }
@@ -258,6 +260,8 @@ $('btnSave').addEventListener('click', async () => {
     msg.textContent = `Partai ${kode} tersimpan. Bagikan kode ini ke operator & wasit.`;
     $('links').classList.remove('hidden');
     $('lnkOp').href = `./operator.html#${kode}`;
+    // papan tamu dibuka lewat NOMOR partai (bukan kode) agar kode tidak tersebar
+    $('lnkBoard').href = meta.no ? `./#${encodeURIComponent(meta.no)}` : './';
     $('links').scrollIntoView({ behavior:'smooth', block:'nearest' });
   }catch(e){
     msg.classList.add('err'); msg.textContent = "Gagal menyimpan: " + (e.message||e);

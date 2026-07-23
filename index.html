@@ -268,8 +268,8 @@ background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAoAAAAKECAMAAACggn
             <div class="code" id="codeChung"></div>
           </div>
           <div class="info-box">
-            <div class="nm" id="nmChung">Jim</div>
-            <div class="ctry" id="ctryChung">Washington</div>
+            <div class="nm" id="nmChung">Chung</div>
+            <div class="ctry" id="ctryChung"></div>
           </div>
         </div>
         <div class="sc" id="scChung">0</div>
@@ -303,8 +303,8 @@ background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAoAAAAKECAMAAACggn
             <div class="code" id="codeHong"></div>
           </div>
           <div class="info-box">
-            <div class="nm" id="nmHong">LeSai</div>
-            <div class="ctry" id="ctryHong">New York</div>
+            <div class="nm" id="nmHong">Hong</div>
+            <div class="ctry" id="ctryHong"></div>
           </div>
         </div>
         <div class="sc" id="scHong">0</div>
@@ -353,6 +353,11 @@ import { db } from "./firebase-config.js";
 import { ref, onValue } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-database.js";
 
 const $ = id => document.getElementById(id);
+
+/* waktu SERVER: jam TV/HP penonton sering meleset dari jam operator */
+let sOffset = 0;
+onValue(ref(db, ".info/serverTimeOffset"), s => { sOffset = s.val() || 0; }, () => {});
+const now = () => Date.now() + sOffset;
 
 /* ===== Suara ===== */
 let ac=null, soundOn=false;
@@ -426,6 +431,7 @@ function pasang(kode){
 /* hapus sisa tampilan partai sebelumnya agar tidak tercampur */
 function bersihkanTampilan(){
   cur=null; prevRem=null; sudahBel=false;
+  prev={chung:0,hong:0}; pertama=true;   // jangan bandingkan skor partai baru dgn partai lama
   lastFlashAt=null; sudahMuat=false; matchSuara=false;
   lastHitAt=null; hitRound=null; sudahMuatHit=false;
   const rf=$('roundFlash'), mf=$('matchFlash'), b=$('banner');
@@ -439,10 +445,10 @@ function renderMeta(m){
   $('matchCode').textContent = m.no ? String(m.no) : "\u2014";
   
   const c=m.chung||{}, h=m.hong||{};
-  $('nmChung').textContent = c.name || "Jim";
-  $('nmHong').textContent  = h.name || "LeSai";
-  $('ctryChung').textContent = c.country || "Washington";
-  $('ctryHong').textContent  = h.country || "New York";
+  $('nmChung').textContent = c.name || "Chung";
+  $('nmHong').textContent  = h.name || "Hong";
+  $('ctryChung').textContent = c.country || "";
+  $('ctryHong').textContent  = h.country || "";
   $('codeChung').textContent = c.code || "";
   $('codeHong').textContent  = h.code || "";
   
@@ -610,7 +616,7 @@ function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
 function fmt(sec){ const m=Math.floor(sec/60); return `${m}:${String(sec%60).padStart(2,'0')}`; }
 function renderClock(){
   const s=cur; if(!s)return;
-  let sec = s.phase==="running" ? Math.max(0,Math.round((s.endAt-Date.now())/1000)) : (s.remaining??36);
+  let sec = s.phase==="running" ? Math.max(0,Math.round((s.endAt-now())/1000)) : (s.remaining??0);
   if(prevRem!==null && prevRem>0 && sec===0 && s.phase==="running" && !sudahBel){ bunyiBel(); sudahBel=true; }
   if(sec>0) sudahBel=false; prevRem=sec;
   const c=$('clock'); c.textContent=fmt(sec); c.classList.toggle('brk', s.phase==="break");
