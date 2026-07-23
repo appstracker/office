@@ -723,5 +723,25 @@ $('menuPanel').addEventListener('click', e=>{ if(e.target===$('menuPanel')) $('m
   document.addEventListener('touchend', masukFS, {passive:true});
 })();
 </script>
+<script>
+/* ===== layar tidak padam selama halaman terbuka (skrip biasa, tanpa module) ===== */
+(function(){
+  var kunci = null;
+  function minta(){
+    try{
+      if (!('wakeLock' in navigator)) return;
+      navigator.wakeLock.request('screen').then(function(k){
+        kunci = k;
+        k.addEventListener('release', function(){ kunci = null; });
+      }).catch(function(){});
+    }catch(e){}
+  }
+  minta();
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'visible' && !kunci) minta();
+  });
+  document.addEventListener('pointerdown', function(){ if (!kunci) minta(); });
+})();
+</script>
 </body>
 </html>
