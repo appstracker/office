@@ -881,7 +881,13 @@ $('ruleSave').addEventListener('click', () => {
 /* ====== kehadiran wasit 1-2-3 (butuh izin node judges di Rules) ====== */
 let dataWasit = {};
 function dengarWasit(){
-  onValue(ref(db, `matches/${KODE}/judges`), snap => { dataWasit = snap.val() || {}; renderWasit(); });
+  onValue(ref(db, `matches/${KODE}/judges`),
+    snap => { dataWasit = snap.val() || {}; sembunyiGalat(); renderWasit(); },
+    err  => galat(
+      'Operator TIDAK BISA membaca status wasit (' + ((err && err.code) || err) + '). '
+    + 'Lampu wasit 1-2-3 akan tetap merah. '
+    + 'Perbaikan: beri izin baca node "judges" di Firebase Rules. '
+    + 'Skor & penilaian tidak terpengaruh.'));
   setInterval(renderWasit, 5000);
 }
 function renderWasit(){
@@ -1079,6 +1085,43 @@ function pasangBack(){
   history.pushState({ op:true }, "");
   window.addEventListener('popstate', () => { history.pushState({ op:true }, ""); mintaKeluar(); });
 }
+
+/* ====== PATCH DIAGNOSTIK v1 (aditif — tidak mengubah logika lama) ======
+   Menampilkan pesan bila Firebase menolak tulis/baca node "judges",
+   yang selama ini gagal DIAM-DIAM sehingga lampu wasit tetap merah.      */
+let _kotakGalat = null, _teksGalat = null, _galatTerakhir = "";
+function galat(teks){
+  try{
+    if (teks === _galatTerakhir) return;            // jangan spam pesan sama
+    _galatTerakhir = teks;
+    console.warn('[DIAGNOSTIK]', teks);
+    if (!_kotakGalat){
+      _kotakGalat = document.createElement('div');
+      _kotakGalat.style.cssText =
+        'position:fixed;left:8px;right:8px;bottom:26px;z-index:99998;max-width:640px;margin:0 auto;'+
+        'background:#7A1414;border:1px solid #E0453A;color:#FFE9E9;border-radius:10px;'+
+        'padding:10px 34px 10px 12px;font:600 12px/1.45 system-ui,-apple-system,sans-serif;'+
+        'box-shadow:0 8px 24px rgba(0,0,0,.5)';
+      const x = document.createElement('button');
+      x.textContent = '\u00d7';
+      x.setAttribute('aria-label','tutup');
+      x.style.cssText = 'position:absolute;top:2px;right:8px;background:none;border:0;'+
+        'color:#FFD9D9;font-size:20px;line-height:1;cursor:pointer';
+      x.onclick = () => sembunyiGalat();
+      _teksGalat = document.createElement('div');
+      _kotakGalat.appendChild(x);
+      _kotakGalat.appendChild(_teksGalat);
+      document.body.appendChild(_kotakGalat);
+    }
+    _teksGalat.textContent = teks;
+    _kotakGalat.style.display = 'block';
+  }catch(e){ console.warn(teks); }
+}
+function sembunyiGalat(){
+  _galatTerakhir = "";
+  if (_kotakGalat) _kotakGalat.style.display = 'none';
+}
+
 </script>
 <div style="position:fixed;left:8px;bottom:6px;font-size:10px;color:#5a6472;letter-spacing:.08em;z-index:5;pointer-events:none">V1 &middot; &copy;SRISP 2026</div>
 </body>
