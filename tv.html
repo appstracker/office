@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Live Taekwondo &mdash; Papan TV</title>
+<style>
+/* CSS sengaja dibuat kuno: tanpa variabel, tanpa clamp, tanpa grid, tanpa flex.
+   Semua memakai posisi absolut + persen supaya browser Smart TV lama ikut mengerti. */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#05070B;
+  font-family:Arial,Helvetica,sans-serif;color:#EEF2F8}
+
+#wait{position:absolute;top:0;left:0;width:100%;height:100%;text-align:center}
+#wait .in{position:absolute;top:42%;left:0;width:100%}
+#wait .k{font-size:1.5vw;letter-spacing:.4em;color:#F5B325;font-weight:bold}
+#wait .b{font-size:3.4vw;font-weight:bold;margin-top:1.4vw}
+#wait .s{font-size:1.5vw;color:#8A93A3;margin-top:1vw}
+
+#board{position:absolute;top:0;left:0;width:100%;height:100%;display:none}
+
+/* judul atas */
+#head{position:absolute;top:0;left:0;width:100%;height:9%;
+  background:#0C1017;border-bottom:2px solid #1D2431;text-align:center}
+#head .no{font-size:2.6vw;font-weight:bold;line-height:1.1;padding-top:1.1%}
+#head .cat{font-size:1.4vw;color:#9AA4B4;letter-spacing:.2em}
+
+/* dua panel atlet */
+.side{position:absolute;top:9%;height:74%;width:36%}
+#sChung{left:0;background:#134FC4}
+#sHong{right:0;background:#B00000}
+.side .nm{position:absolute;top:6%;left:0;width:100%;text-align:center;
+  font-size:3.2vw;font-weight:bold;line-height:1.1;padding:0 2%}
+.side .ct{position:absolute;top:22%;left:0;width:100%;text-align:center;
+  font-size:1.5vw;color:#DDE6F5;letter-spacing:.18em}
+.side .sc{position:absolute;top:30%;left:0;width:100%;text-align:center;
+  font-size:15vw;font-weight:bold;line-height:1}
+
+/* baris statistik bawah tiap panel */
+.side .st{position:absolute;bottom:4%;left:0;width:100%;text-align:center;font-size:1.5vw}
+.side .st span{display:inline-block;margin:0 1.2%;color:#EAF0FA}
+.side .st b{font-size:1.9vw}
+
+/* kolom tengah */
+#mid{position:absolute;top:9%;left:36%;width:28%;height:74%;background:#080B11;
+  border-left:2px solid #1D2431;border-right:2px solid #1D2431;text-align:center}
+#rnd{position:absolute;top:5%;left:0;width:100%}
+#rnd .rn{font-size:6vw;font-weight:bold;line-height:1}
+#rnd .rl{font-size:1.3vw;color:#8A93A3;letter-spacing:.3em}
+#clk{position:absolute;top:36%;left:0;width:100%;font-size:8.5vw;font-weight:bold;
+  line-height:1;color:#F5B325}
+#won{position:absolute;bottom:16%;left:0;width:100%;font-size:1.4vw;color:#8A93A3;letter-spacing:.2em}
+#wonV{font-size:2.6vw;color:#EEF2F8;font-weight:bold;display:block;margin-top:.4vw}
+#stat{position:absolute;bottom:4%;left:5%;width:90%;padding:.7vw 0;border-radius:.6vw;
+  background:#F5B325;color:#241A05;font-size:1.6vw;font-weight:bold;letter-spacing:.2em;display:none}
+
+/* kaki */
+#foot{position:absolute;bottom:0;left:0;width:100%;height:17%;background:#0C1017;
+  border-top:2px solid #1D2431;text-align:center}
+#foot .ttl{font-size:1.2vw;color:#6D7688;letter-spacing:.35em;padding-top:1.4%}
+#foot .dot{display:inline-block;width:.8vw;height:.8vw;border-radius:50%;
+  background:#E0453A;margin-right:.5vw;vertical-align:middle}
+#foot .dot.on{background:#3BE07A}
+#foot .cn{font-size:1.2vw;color:#8A93A3;margin-top:.6%}
+
+/* layar pemenang */
+#win{position:absolute;top:0;left:0;width:100%;height:100%;display:none;text-align:center}
+#win .in{position:absolute;top:36%;left:0;width:100%}
+#win .w1{font-size:2vw;letter-spacing:.4em}
+#win .w2{font-size:7vw;font-weight:bold;line-height:1.1;margin:1vw 0}
+#win .w3{font-size:2.2vw;letter-spacing:.2em}
+
+/* banner pemenang ronde */
+#rf{position:absolute;top:38%;left:0;width:100%;text-align:center;display:none}
+#rf .r1{font-size:5.5vw;font-weight:bold;line-height:1.1;
+  text-shadow:0 .3vw 1vw rgba(0,0,0,.7)}
+#rf .r2{font-size:2vw;letter-spacing:.25em;margin-top:.8vw;color:#EEF2F8}
+</style>
+</head>
+<body>
+
+<div id="wait">
+  <div class="in">
+    <div class="k">LIVE TAEKWONDO</div>
+    <div class="b">Menunggu pertandingan&hellip;</div>
+    <div class="s" id="waitSub">Belum ada pertandingan yang ditayangkan.</div>
+  </div>
+</div>
+
+<div id="board">
+  <div id="head">
+    <div class="no" id="hNo">&nbsp;</div>
+    <div class="cat" id="hCat">&nbsp;</div>
+  </div>
+
+  <div class="side" id="sChung">
+    <div class="nm" id="nmC">Chung</div>
+    <div class="ct" id="ctC"></div>
+    <div class="sc" id="scC">0</div>
+    <div class="st" id="stC"></div>
+  </div>
+
+  <div id="mid">
+    <div id="rnd"><div class="rn" id="rnV">1</div><div class="rl">RONDE / 3</div></div>
+    <div id="clk">2:00</div>
+    <div id="won">RONDE DIMENANGKAN<b id="wonV">0 - 0</b></div>
+    <div id="stat"></div>
+  </div>
+
+  <div class="side" id="sHong">
+    <div class="nm" id="nmH">Hong</div>
+    <div class="ct" id="ctH"></div>
+    <div class="sc" id="scH">0</div>
+    <div class="st" id="stH"></div>
+  </div>
+
+  <div id="foot">
+    <div class="ttl">IDWT.WEB.ID &middot; PAPAN TV</div>
+    <div class="cn"><i class="dot" id="dot"></i><span id="cnT">menyambung&hellip;</span></div>
+  </div>
+
+  <div id="rf"><div class="r1" id="rfN"></div><div class="r2" id="rfT"></div></div>
+</div>
+
+<div id="win"><div class="in">
+  <div class="w1" id="wk">PEMENANG</div>
+  <div class="w2" id="wn"></div>
+  <div class="w3" id="wt"></div>
+</div></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script>
+/* ================================================================
+   PAPAN TV — versi untuk browser Smart TV lama.
+   Sengaja TIDAK memakai: module, arrow function, let/const,
+   template literal, ?? dan ?. — semuanya ES5 murni.
+   ================================================================ */
+(function(){
+  var CFG = {
+    apiKey: "AIzaSyA8iriYJKwKRwkUSCFCtg6dNi8k0z-4fq8",
+    authDomain: "livewt-33fa4.firebaseapp.com",
+    databaseURL: "https://livewt-33fa4-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "livewt-33fa4",
+    storageBucket: "livewt-33fa4.firebasestorage.app",
+    messagingSenderId: "449784629916",
+    appId: "1:449784629916:web:fd5fbda8b82c0ecdb47b59"
+  };
+
+  function $(id){ return document.getElementById(id); }
+  function txt(id, v){ var e = $(id); if (e) e.innerHTML = v; }
+  function tampil(id, ya){ var e = $(id); if (e) e.style.display = ya ? "block" : "none"; }
+
+  if (typeof firebase === "undefined"){
+    txt("waitSub", "Gagal memuat Firebase. Periksa koneksi internet TV.");
+    return;
+  }
+  firebase.initializeApp(CFG);
+  var db = firebase.database();
+
+  /* waktu server, sama seperti halaman lain */
+  var sOffset = 0;
+  db.ref(".info/serverTimeOffset").on("value", function(s){ sOffset = s.val() || 0; });
+  function now(){ return (new Date()).getTime() + sOffset; }
+
+  /* koneksi */
+  db.ref(".info/connected").on("value", function(s){
+    var ada = s.val() === true;
+    $("dot").className = ada ? "dot on" : "dot";
+    txt("cnT", ada ? "tersambung" : "terputus");
+  });
+
+  /* ---------- keadaan ---------- */
+  var KODE = "";
+  var langganan = [];          // {r: ref, cb: fungsi}
+  var ST = null, META = null;
+  var lastRoundAt = 0, sudahMuat = false, rfTimer = null;
+
+  function lepasSemua(){
+    for (var i = 0; i < langganan.length; i++){
+      try{ langganan[i].r.off("value", langganan[i].cb); }catch(e){}
+    }
+    langganan = [];
+  }
+  function dengar(path, cb){
+    var r = db.ref(path);
+    r.on("value", cb);
+    langganan.push({ r: r, cb: cb });
+  }
+
+  function tampilTunggu(){
+    lepasSemua(); KODE = ""; ST = null; META = null;
+    tampil("board", false); tampil("win", false);
+    $("wait").style.display = "block";
+  }
+
+  function pasang(kode){
+    if (!kode || kode === KODE) return;
+    lepasSemua();
+    KODE = kode;
+    ST = null; META = null; lastRoundAt = 0; sudahMuat = false;
+    $("wait").style.display = "none";
+    tampil("board", true); tampil("win", false); tampil("rf", false);
+
+    dengar("matches/" + kode + "/state", function(s){ ST = s.val(); renderState(); });
+    dengar("matches/" + kode + "/meta",  function(s){ META = s.val(); renderMeta(); });
+  }
+
+  /* ---------- gambar ulang ---------- */
+  function renderMeta(){
+    var m = META || {}, c = m.chung || {}, h = m.hong || {};
+    txt("hNo",  m.no ? ("PARTAI " + m.no) : "&nbsp;");
+    txt("hCat", m.category ? m.category : "&nbsp;");
+    txt("nmC", c.name ? c.name : "Chung");
+    txt("nmH", h.name ? h.name : "Hong");
+    txt("ctC", c.country ? c.country : "");
+    txt("ctH", h.country ? h.country : "");
+  }
+
+  function labelJenis(t){
+    if (t === "PTG") return "POINT GAP";
+    if (t === "PUN") return "PUNITIVE";
+    if (t === "SUP") return "SUPERIORITAS";
+    if (t === "RSC") return "RSC";
+    if (t === "WDR") return "MUNDUR";
+    if (t === "DSQ") return "DISKUALIFIKASI";
+    return "POIN";
+  }
+
+  function renderState(){
+    var s = ST;
+    if (!s){ return; }
+
+    txt("scC", String(s.chung || 0));
+    txt("scH", String(s.hong  || 0));
+    txt("rnV", String(s.round || 1));
+    txt("wonV", String(s.wonChung || 0) + " - " + String(s.wonHong || 0));
+
+    txt("stC", "<span>GAM-JEOM <b>" + (s.gamjeomChung || 0) + "</b></span>" +
+               "<span>HIT <b>" + (s.hitsChung || 0) + "</b></span>");
+    txt("stH", "<span>GAM-JEOM <b>" + (s.gamjeomHong || 0) + "</b></span>" +
+               "<span>HIT <b>" + (s.hitsHong || 0) + "</b></span>");
+
+    /* pita status */
+    var e = $("stat");
+    if (s.phase === "break"){
+      e.innerHTML = s.breakLabel ? s.breakLabel : "TIME OUT";
+      e.style.display = "block";
+    } else if (s.phase === "paused"){
+      e.innerHTML = "JEDA"; e.style.display = "block";
+    } else {
+      e.style.display = "none";
+    }
+
+    /* pemenang partai */
+    if (s.matchOver && s.winner){
+      var mm = META || {}, sisi = (s.winner === "chung") ? (mm.chung || {}) : (mm.hong || {});
+      var nama = sisi.name ? sisi.name : (s.winner === "chung" ? "CHUNG" : "HONG");
+      $("win").style.background = (s.winner === "chung") ? "#134FC4" : "#B00000";
+      txt("wn", nama);
+      txt("wt", labelJenis(s.winType) + " &middot; MENANG " +
+                (s.wonChung || 0) + "-" + (s.wonHong || 0));
+      tampil("win", true);
+    } else {
+      tampil("win", false);
+    }
+
+    /* banner pemenang ronde */
+    var lr = s.lastRound;
+    if (lr && lr.at && lr.at !== lastRoundAt){
+      lastRoundAt = lr.at;
+      if (sudahMuat) banner(lr);
+    }
+    sudahMuat = true;
+  }
+
+  function banner(lr){
+    var mm = META || {}, sisi = (lr.winner === "chung") ? (mm.chung || {}) : (mm.hong || {});
+    var nama = sisi.name ? sisi.name : (lr.winner === "chung" ? "CHUNG" : "HONG");
+    $("rfN").style.color = (lr.winner === "chung") ? "#5B9BFF" : "#FF6A6A";
+    txt("rfN", nama);
+    txt("rfT", "RONDE " + lr.round + " &mdash; " + labelJenis(lr.type));
+    tampil("rf", true);
+    if (rfTimer) clearTimeout(rfTimer);
+    rfTimer = setTimeout(function(){ tampil("rf", false); }, 5000);
+  }
+
+  /* jam berjalan */
+  function renderJam(){
+    var s = ST;
+    if (!s){ return; }
+    var d;
+    if (s.phase === "running"){
+      d = Math.round(((s.endAt || 0) - now()) / 1000);
+    } else if (s.phase === "break"){
+      d = Math.round(((s.breakEnd || 0) - now()) / 1000);
+    } else {
+      d = (typeof s.remaining === "number") ? s.remaining : 0;
+    }
+    if (d < 0) d = 0;
+    var m = Math.floor(d / 60), k = d % 60;
+    txt("clk", m + ":" + (k < 10 ? "0" + k : String(k)));
+  }
+  setInterval(renderJam, 250);
+
+  /* ---------- partai mana yang ditampilkan ---------- */
+  var pilihManual = false;
+
+  function cocokkanHash(){
+    var h = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (!h){ pilihManual = false; return; }
+    pilihManual = true;
+    db.ref("matches").once("value", function(snap){
+      var v = snap.val() || {}, ketemu = "", k;
+      for (k in v){
+        if (v.hasOwnProperty(k) && v[k] && v[k].meta &&
+            String(v[k].meta.no) === String(h)){ ketemu = k; }
+      }
+      pasang(ketemu ? ketemu : h);   // tanpa nomor cocok, anggap hash itu kode partai
+    }, function(){
+      pasang(h);                     // bila baca root ditolak Rules
+    });
+  }
+
+  db.ref("live").on("value", function(s){
+    if (pilihManual) return;
+    var k = s.val();
+    if (!k){ tampilTunggu(); return; }
+    pasang(k);
+  });
+
+  if (window.addEventListener){
+    window.addEventListener("hashchange", cocokkanHash, false);
+  }
+  cocokkanHash();
+
+  /* layar TV jangan padam bila browsernya mendukung */
+  try{
+    if (navigator.wakeLock && navigator.wakeLock.request){
+      navigator.wakeLock.request("screen")["catch"](function(){});
+    }
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
